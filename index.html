@@ -1,0 +1,5259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>365 Days of Tea with Thi ☕</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --gold: #f5c518;
+    --text: #eee;
+    --muted: #8892b0;
+    --visited: #533483;
+    --hover: #1a4a7a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    background: linear-gradient(135deg, var(--surface), var(--card));
+    border-bottom: 3px solid var(--accent);
+  }
+  header h1 {
+    font-size: 2.2rem;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.3rem;
+  }
+  header h1 span { color: var(--gold); }
+  header p {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 1rem;
+  }
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 0.8rem;
+    background: var(--surface);
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .stats-bar .num { color: var(--gold); font-weight: bold; }
+  .year-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 1rem;
+    background: var(--surface);
+  }
+  .month-btn {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--card);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .month-btn:hover, .month-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .calendar-grid {
+    max-width: 900px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+  }
+  .month-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    color: var(--gold);
+    text-align: center;
+  }
+  .weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--card);
+    color: var(--text);
+  }
+  .day-cell:hover {
+    background: var(--hover);
+    transform: scale(1.08);
+    z-index: 2;
+  }
+  .day-cell.visited {
+    background: var(--visited);
+    color: #ddd;
+  }
+  .day-cell.visited::after {
+    content: '☕';
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 0.55rem;
+  }
+  .day-cell.today {
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 8px rgba(245,197,24,0.4);
+  }
+  .day-cell.empty {
+    background: transparent;
+    cursor: default;
+  }
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    max-width: 560px;
+    width: 100%;
+    padding: 2rem;
+    position: relative;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-close {
+    position: absolute;
+    top: 0.8rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .modal-date {
+    color: var(--gold);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .modal-quote {
+    font-size: 1.3rem;
+    line-height: 1.5;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #fff;
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+  }
+  .modal-meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .modal-meta span { color: var(--text); }
+  .modal-hashtag {
+    display: inline-block;
+    background: var(--card);
+    color: var(--accent);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  .modal-mood {
+    display: inline-block;
+    background: var(--visited);
+    color: #eee;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    margin-left: 0.3rem;
+  }
+  .modal-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.2rem;
+  }
+  .modal-nav button {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .modal-nav button:hover { background: var(--accent); }
+  .modal-context {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .cross-ref {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--gold);
+    cursor: pointer;
+  }
+  .cross-ref:hover { text-decoration: underline; }
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  /* Progress bar */
+  .progress-container {
+    max-width: 300px;
+    margin: 0 auto;
+    height: 6px;
+    background: var(--card);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.5rem; }
+    .modal-quote { font-size: 1.1rem; }
+    .day-cell { font-size: 0.8rem; }
+    .stats-bar { flex-direction: column; gap: 0.3rem; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>365 Days of <span>Tea with Thi</span> ☕</h1>
+  <p>"Content is King, Context is King Kong"</p>
+</header>
+
+<div class="stats-bar">
+  <div>Days explored: <span class="num" id="visited-count">0</span> / 365</div>
+  <div>Progress: <span class="num" id="pct">0%</span></div>
+  <div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+  <div><button onclick="resetVisited()" style="background:none;border:1px solid var(--muted);color:var(--muted);padding:0.2rem 0.6rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">Reset</button></div>
+</div>
+
+<nav class="year-nav" id="month-nav"></nav>
+
+<main class="calendar-grid" id="calendar"></main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-date" id="m-date"></div>
+    <div class="modal-quote" id="m-quote"></div>
+    <div class="modal-meta">
+      <div>Episode <span id="m-ep"></span>: <span id="m-title"></span></div>
+      <div>Category: <span id="m-cat"></span></div>
+      <div>Theme: <span id="m-theme"></span></div>
+      <div class="modal-context" id="m-context"></div>
+      <div style="margin-top:0.5rem;">
+        <span class="modal-hashtag" id="m-hashtag"></span>
+        <span class="modal-mood" id="m-mood"></span>
+      </div>
+      <div class="cross-ref" id="m-crossref" onclick="jumpCrossRef()"></div>
+    </div>
+    <div class="modal-nav">
+      <button onclick="navDay(-1)">← Previous</button>
+      <button onclick="navDay(1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  ☕ Reading Tea Leaves — A Calendar of Wisdom by Gia-Thi Nguyen<br>
+  Inspired by Tolstoy's <em>A Calendar of Wisdom</em>
+</footer>
+
+<script>
+const ALMANAC = [
+  {
+    "day": 1,
+    "date_label": "January 1",
+    "quote": "I love complexity. Complexity is real. Complicated is what humans do to each other.",
+    "episode": 1,
+    "episode_title": "Complexity",
+    "hashtag": "#transformation",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "New Beginnings",
+    "mood": "passionate",
+    "context": "Thi kicks off with a love letter to complexity \u2014 embracing what's real rather than oversimplifying",
+    "cross_ref_episode": 3
+  },
+  {
+    "day": 2,
+    "date_label": "January 2",
+    "quote": "Usually it would be nice to say that we are improving every day however a famous quote from former German Chancellor Conrad arenauer roughly translates to what do I care about my Chit Chat of yesterday nobody can prohibit me from getting smarter...",
+    "episode": 70,
+    "episode_title": "Better Every Day",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Driving Transformation",
+    "mood": "provocative",
+    "context": "sorry but not sorry is it really my fault that I get smarter every day usually it would be nice to say that we are im",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 3,
+    "date_label": "January 3",
+    "quote": "Need of the many outweigh the needs of a few.",
+    "episode": 144,
+    "episode_title": "User Experience",
+    "hashtag": "#design",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "User Experience",
+    "mood": "passionate",
+    "context": "the need of the many outweigh the needs of a few but could you tell me who are the many and how many is many some pro",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 4,
+    "date_label": "January 4",
+    "quote": "Hello there second business as usual mind your own business money business let's get down to business.",
+    "episode": 8,
+    "episode_title": "Business",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Business",
+    "mood": "practical",
+    "context": "hello there second business business as usual mind your own business money business let's get down to business busine",
+    "cross_ref_episode": 21
+  },
+  {
+    "day": 5,
+    "date_label": "January 5",
+    "quote": "Try to define success in as many ways as possible, and you will always be successful.",
+    "episode": 5,
+    "episode_title": "Success",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Redefining Success",
+    "mood": "inspiring",
+    "context": "Thi encourages broadening the definition of success beyond just numbers",
+    "cross_ref_episode": 97
+  },
+  {
+    "day": 6,
+    "date_label": "January 6",
+    "quote": "Your eyes hurting already hope I got your attention today's episode is about priorities and inflation well actually it is about the inflation of priorities.",
+    "episode": 33,
+    "episode_title": "Inflation of Prio",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Inflation of Prio",
+    "mood": "inspiring",
+    "context": "are your eyes hurting already hope I got your attention today's episode is about priorities and inflation well actual",
+    "cross_ref_episode": 187
+  },
+  {
+    "day": 7,
+    "date_label": "January 7",
+    "quote": "Do transformation activities fail so often today I want to mention one reason I've seen many times but I haven't seen a lot of discussion around it can you guess which one I mean.",
+    "episode": 3,
+    "episode_title": "Moving Baselines",
+    "hashtag": "#transformation",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Driving Transformation",
+    "mood": "provocative",
+    "context": "why do transformation activities fail so often today I want to mention one reason I've seen many times but I haven't",
+    "cross_ref_episode": 1
+  },
+  {
+    "day": 8,
+    "date_label": "January 8",
+    "quote": "Do you call people which are ignorant and arrogant at the same time.",
+    "episode": 197,
+    "episode_title": "Agnorant",
+    "hashtag": "#humor",
+    "category": "Literature & Language",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "how do you call people which are ignorant and arrogant at the same time ignorant I have no clue who is the creator of",
+    "cross_ref_episode": 54
+  },
+  {
+    "day": 9,
+    "date_label": "January 9",
+    "quote": "Ever heard something like well yes I remember that meeting and the follow-up minutes but the topic you mentioned I cannot recall welcome to the first episode of corporate illnesses today featuring selective amnesia.",
+    "episode": 45,
+    "episode_title": "Selective Amnesia",
+    "hashtag": "#psychology",
+    "category": "Philosophy & Mindset",
+    "theme": "Selective Amnesia",
+    "mood": "practical",
+    "context": "ever heard something like well yes I remember that meeting and the follow-up minutes but the topic you mentioned I ca",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 10,
+    "date_label": "January 10",
+    "quote": "There are a few words that can be tracked back to a single event or person today I want to talk about robots again.",
+    "episode": 124,
+    "episode_title": "Robots Again",
+    "hashtag": "#ai",
+    "category": "Technology & AI",
+    "theme": "Robots Again",
+    "mood": "passionate",
+    "context": "there are a few words that can be tracked back to a single event or person today I want to talk about robots again I'",
+    "cross_ref_episode": 158
+  },
+  {
+    "day": 11,
+    "date_label": "January 11",
+    "quote": "Back to school today remember that every square is also rectangle but not every rectangle is a square.",
+    "episode": 18,
+    "episode_title": "KPIs and Metrics",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "KPIs and Metrics",
+    "mood": "inspiring",
+    "context": "back to school today remember that every square is also rectangle but not every rectangle is a square similar manner",
+    "cross_ref_episode": 310
+  },
+  {
+    "day": 12,
+    "date_label": "January 12",
+    "quote": "Many moons ago I learned that between an input and an output laser process.",
+    "episode": 133,
+    "episode_title": "Input Process Output",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "philosophical",
+    "context": "many moons ago I learned that between an input and an output laser process and I learned that with different inputs b",
+    "cross_ref_episode": 28
+  },
+  {
+    "day": 13,
+    "date_label": "January 13",
+    "quote": "Mis and plus or the way how to do a better ESO implementation with SCP.",
+    "episode": 181,
+    "episode_title": "Mise En Place",
+    "hashtag": "#leadership",
+    "category": "Food & Culture",
+    "theme": "Mise En Place",
+    "mood": "practical",
+    "context": "Mis and plus or the way how to do a better ESO implementation with SCP",
+    "cross_ref_episode": 13
+  },
+  {
+    "day": 14,
+    "date_label": "January 14",
+    "quote": "It's time for some deeper look into the statement learning by doing is always a great way to achieve mastery.",
+    "episode": 29,
+    "episode_title": "Learning by doing",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Lifelong Learning",
+    "mood": "philosophical",
+    "context": "it's time for some deeper look into the statement learning by doing is always a great way to achieve mastery open hea",
+    "cross_ref_episode": 23
+  },
+  {
+    "day": 15,
+    "date_label": "January 15",
+    "quote": "Is a customer who is the customer.",
+    "episode": 128,
+    "episode_title": "A And The Customer",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Customer Centricity",
+    "mood": "inspiring",
+    "context": "who is a customer who is the customer like many of you I have come across Porter's five forces many years ago already",
+    "cross_ref_episode": 39
+  },
+  {
+    "day": 16,
+    "date_label": "January 16",
+    "quote": "Friday fun which of the three miscommunication scenarios do you encounter most.",
+    "episode": 17,
+    "episode_title": "3 Miscommunication",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Clear Communication",
+    "mood": "philosophical",
+    "context": "Friday fun which of the three miscommunication scenarios do you encounter most",
+    "cross_ref_episode": 184
+  },
+  {
+    "day": 17,
+    "date_label": "January 17",
+    "quote": "Are transformation agents changes inevitable resistance is futile you will be SMA transformed.",
+    "episode": 11,
+    "episode_title": "Resistance",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Driving Transformation",
+    "mood": "practical",
+    "context": "we are transformation agents changes inevitable resistance is futile you will be SMA transformed even if you are not",
+    "cross_ref_episode": 174
+  },
+  {
+    "day": 18,
+    "date_label": "January 18",
+    "quote": "Take what first initially looks like a huge insurmountable problem and you decompose it into its various constituents until it's at a scale that you can solve and then you reintegrate that together.",
+    "episode": 86,
+    "episode_title": "Loren",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Loren",
+    "mood": "practical",
+    "context": "you take what first initially looks like a huge insurmountable problem and you decompose it into its various constitu",
+    "cross_ref_episode": 4
+  },
+  {
+    "day": 19,
+    "date_label": "January 19",
+    "quote": "There's unfortunately nothing as costly as having not enough.",
+    "episode": 261,
+    "episode_title": "expensive to be poor",
+    "hashtag": "#philosophy",
+    "category": "Business & Strategy",
+    "theme": "expensive to be",
+    "mood": "practical",
+    "context": "there's unfortunately nothing as costly as having not enough money today's episode is based on some Reflections from",
+    "cross_ref_episode": 142
+  },
+  {
+    "day": 20,
+    "date_label": "January 20",
+    "quote": "I love to be in control like shooting my own videos but sometimes you lose control over something you never even had control over to begin with and that's okay.",
+    "episode": 13,
+    "episode_title": "Control and Confidence",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Fresh Beginnings",
+    "mood": "passionate",
+    "context": "I love to be in control like shooting my own videos but sometimes you lose control over something you never even had",
+    "cross_ref_episode": 40
+  },
+  {
+    "day": 21,
+    "date_label": "January 21",
+    "quote": "Popular phrase came originally from Walter Scott's novel would stop all the Cavalier and goes as following Eric said the mayor and that which we call a pudding hand too German speakers note more likely as Allah.",
+    "episode": 49,
+    "episode_title": "End to End",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "End to End",
+    "mood": "provocative",
+    "context": "the popular phrase came originally from Walter Scott's novel would stop all the Cavalier and goes as following Eric s",
+    "cross_ref_episode": 249
+  },
+  {
+    "day": 22,
+    "date_label": "January 22",
+    "quote": "Have to fix yourself before you fix the world otherwise you become part of the problem.",
+    "episode": 100,
+    "episode_title": "Nishant",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Nishant",
+    "mood": "reflective",
+    "context": "I save this one just for you so I'm here joined with Nishan on a very important topic but before we get into it Nisha",
+    "cross_ref_episode": 36
+  },
+  {
+    "day": 23,
+    "date_label": "January 23",
+    "quote": "Where do you take all the time to make tea with tea video.",
+    "episode": 166,
+    "episode_title": "Making Things Shorter",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "where do you take all the time to make tea with tea video episodes well the most time the process takes is making the",
+    "cross_ref_episode": 241
+  },
+  {
+    "day": 24,
+    "date_label": "January 24",
+    "quote": "Just because I don't do things because I don't like them doesn't mean I don't like you when you do those things.",
+    "episode": 150,
+    "episode_title": "150Th",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "150Th",
+    "mood": "provocative",
+    "context": "just because I don't do things because I don't like them doesn't mean I don't like you when you do those things the i",
+    "cross_ref_episode": 266
+  },
+  {
+    "day": 25,
+    "date_label": "January 25",
+    "quote": "Best compliment I have received in a while goes as following T I didn't like the last tea with tea episode.",
+    "episode": 39,
+    "episode_title": "compliments",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "compliments",
+    "mood": "passionate",
+    "context": "Discussion about automation, data, courage",
+    "cross_ref_episode": 326
+  },
+  {
+    "day": 26,
+    "date_label": "January 26",
+    "quote": "Changed his heart and while Everything Changes our mindset often hardly changes so when is change easy.",
+    "episode": 71,
+    "episode_title": "Change",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Embracing Change",
+    "mood": "passionate",
+    "context": "changed his heart and while Everything Changes our mindset often hardly changes so when is change easy yes change is",
+    "cross_ref_episode": 188
+  },
+  {
+    "day": 27,
+    "date_label": "January 27",
+    "quote": "I love math not since day one but ever since.",
+    "episode": 114,
+    "episode_title": "Love Math",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Love Math",
+    "mood": "passionate",
+    "context": "I love math not since day one but ever since",
+    "cross_ref_episode": 37
+  },
+  {
+    "day": 28,
+    "date_label": "January 28",
+    "quote": "What makes me truly unhappy when I hear someone talking about process mining is the happy path.",
+    "episode": 90,
+    "episode_title": "Pm Unhappy Happy Path Part 3",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "reflective",
+    "context": "what makes me truly unhappy when I hear someone talking about process mining is the happy path welcome to part three",
+    "cross_ref_episode": 26
+  },
+  {
+    "day": 29,
+    "date_label": "January 29",
+    "quote": "Ain't no mountain high enough to discover new Mountain metaphors.",
+    "episode": 119,
+    "episode_title": "Mountains",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Mountains",
+    "mood": "passionate",
+    "context": "ain't no mountain high enough to discover new Mountain metaphors you don't need to climb a mountain to know it is hig",
+    "cross_ref_episode": 210
+  },
+  {
+    "day": 30,
+    "date_label": "January 30",
+    "quote": "It's great it probably works but it wasn't my idea so therefore no go.",
+    "episode": 46,
+    "episode_title": "NIH",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "NIH",
+    "mood": "practical",
+    "context": "it's great it probably works but it wasn't my idea so therefore no go NIH syndrome which stands for not invented tear",
+    "cross_ref_episode": 40
+  },
+  {
+    "day": 31,
+    "date_label": "January 31",
+    "quote": "Funny thing though often in a corporate.",
+    "episode": 145,
+    "episode_title": "Better Not Good",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Better Not Good",
+    "mood": "playful",
+    "context": "Thi discusses: It's better to poop in the sink than to sink in poop sorry for this imagery but it depicts exactly the topic of today",
+    "cross_ref_episode": 135
+  },
+  {
+    "day": 32,
+    "date_label": "February 1",
+    "quote": "Thing I noticed with mice players is the focus on consistent great.",
+    "episode": 198,
+    "episode_title": "Best Shots",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Best Shots",
+    "mood": "inspiring",
+    "context": "one thing I noticed with mice players is the focus on consistent great shots consistency is great but you can't be fo",
+    "cross_ref_episode": 219
+  },
+  {
+    "day": 33,
+    "date_label": "February 2",
+    "quote": "Is a combination of making things worse and improving meaning the more you try to make it better the worse it actually becomes this happens often with the great intent of process simplification you need 20 signatures for the approval of an...",
+    "episode": 66,
+    "episode_title": "Verschlimmbessern",
+    "hashtag": "#change",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Embracing Complexity",
+    "mood": "provocative",
+    "context": "today I will teach you a German word feslim basan is a combination of making things worse and improving meaning the m",
+    "cross_ref_episode": 163
+  },
+  {
+    "day": 34,
+    "date_label": "February 3",
+    "quote": "Back to school again today middle school biology.",
+    "episode": 19,
+    "episode_title": "Jargon",
+    "hashtag": "#education",
+    "category": "Communication & Storytelling",
+    "theme": "Jargon",
+    "mood": "passionate",
+    "context": "back to school again today middle school biology there was one sentence I remember as it was yesterday the definition",
+    "cross_ref_episode": 29
+  },
+  {
+    "day": 35,
+    "date_label": "February 4",
+    "quote": "Shade welcome to a very special episode of tea with tea today I'm joined with Elliot we're going to talk about lots of good things but Elliot why don't you just introduce yourself you know tell us where you base where you're calling in from what...",
+    "episode": 189,
+    "episode_title": "Elliott",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Defining Success",
+    "mood": "practical",
+    "context": "a society prospers when old people plant trees knowing that they won't be around to sit in their shade welcome to a v",
+    "cross_ref_episode": 253
+  },
+  {
+    "day": 36,
+    "date_label": "February 5",
+    "quote": "Whether you love or hate the song Yellow Submarine is one of the best songs that Ringo sang.",
+    "episode": 64,
+    "episode_title": "Yellow Submarine",
+    "hashtag": "#music",
+    "category": "Food & Culture",
+    "theme": "Yellow Submarine",
+    "mood": "passionate",
+    "context": "whether you love or hate the song Yellow Submarine is one of the best songs that Ringo sang and when you hear the lin",
+    "cross_ref_episode": 284
+  },
+  {
+    "day": 37,
+    "date_label": "February 6",
+    "quote": "Should I set up the right Coe it's a question I often get asked.",
+    "episode": 134,
+    "episode_title": "How To Coe",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "How To Coe",
+    "mood": "passionate",
+    "context": "how should I set up the right Coe it's a question I often get asked later to cross-functional programs and large acti",
+    "cross_ref_episode": 290
+  },
+  {
+    "day": 38,
+    "date_label": "February 7",
+    "quote": "Which form of leadership do you.",
+    "episode": 297,
+    "episode_title": "Leaderships",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Leading With Purpose",
+    "mood": "philosophical",
+    "context": "which form of leadership do you prefer leader Ys leader tankers leader Cruisers leader carriers or leader hosen do yo",
+    "cross_ref_episode": 313
+  },
+  {
+    "day": 39,
+    "date_label": "February 8",
+    "quote": "Cut things short this is going to be the last episode on shortcuts for now.",
+    "episode": 28,
+    "episode_title": "Shortcuts 3 1",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Shortcuts 3 1",
+    "mood": "inspiring",
+    "context": "to cut things short this is going to be the last episode on shortcuts for now in previous episodes I have mentioned p",
+    "cross_ref_episode": 133
+  },
+  {
+    "day": 40,
+    "date_label": "February 9",
+    "quote": "The popular phrase came originally from Walter Scott's novel would stop all the Cavalier and goes as following Eric said the mayor and that which we call a pudding hand too German speakers note more likely as Allah.",
+    "episode": 49,
+    "episode_title": "End to End",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "End to End",
+    "mood": "provocative",
+    "context": "the popular phrase came originally from Walter Scott's novel would stop all the Cavalier and goes as following Eric s",
+    "cross_ref_episode": 83
+  },
+  {
+    "day": 41,
+    "date_label": "February 10",
+    "quote": "The internet forgets nothing my first LinkedIn article was in 2016 and it was just a title a funny comment and the link to the article itself it was about dropbox's decision to move away from Amazon Cloud to their own architecture wild times if I...",
+    "episode": 150,
+    "episode_title": "150Th",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Leading With Purpose",
+    "mood": "philosophical",
+    "context": "just because I don't do things because I don't like them doesn't mean I don't like you when you do those things the i",
+    "cross_ref_episode": 142
+  },
+  {
+    "day": 42,
+    "date_label": "February 11",
+    "quote": "Are you good with remembering names I am Soo but I know a situation where certain people are perfect with remembering names when I was a kid it started already name calling a classic no pun intended but when you play piano you get classical name...",
+    "episode": 184,
+    "episode_title": "Namecalling",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Musical Thinking",
+    "mood": "provocative",
+    "context": "Discussion about piano, confidence, priorities",
+    "cross_ref_episode": 232
+  },
+  {
+    "day": 43,
+    "date_label": "February 12",
+    "quote": "Want to understand complexity of your processes let's go into your closet.",
+    "episode": 89,
+    "episode_title": "Pm Part 2 Wardrobe",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Embracing Complexity",
+    "mood": "passionate",
+    "context": "want to understand complexity of your processes let's go into your closet I want to address one topic that can be don",
+    "cross_ref_episode": 133
+  },
+  {
+    "day": 44,
+    "date_label": "February 13",
+    "quote": "You know there are no Chinese restaurants in China.",
+    "episode": 161,
+    "episode_title": "No Chinese Restaurants In China",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "No Chinese Restaurants",
+    "mood": "practical",
+    "context": "did you know there are no Chinese restaurants in China in the same way there are no German restaurants in Germany in",
+    "cross_ref_episode": 99
+  },
+  {
+    "day": 45,
+    "date_label": "February 14",
+    "quote": "Celebration of success is often ignored. We don't celebrate often enough. But even more important than the act of celebration is the when and where of celebration.",
+    "episode": 4,
+    "episode_title": "Celebration",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Celebrating Success",
+    "mood": "inspiring",
+    "context": "Thi advocates for celebrating milestones along the journey, not just at the finish line",
+    "cross_ref_episode": 296
+  },
+  {
+    "day": 46,
+    "date_label": "February 15",
+    "quote": "Explain it like I am 5 years old doesn't mean the 5-year-old is.",
+    "episode": 194,
+    "episode_title": "Like 5 Year Old",
+    "hashtag": "#education",
+    "category": "Communication & Storytelling",
+    "theme": "Like 5 Year",
+    "mood": "passionate",
+    "context": "explain it like I am 5 years old doesn't mean the 5-year-old is done I find this task always very challenging because",
+    "cross_ref_episode": 19
+  },
+  {
+    "day": 47,
+    "date_label": "February 16",
+    "quote": "Full disclaimer this is a super long episode but still it was done in one shot only expensive is a matter of value not.",
+    "episode": 251,
+    "episode_title": "Value Cost Price",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Creating Value",
+    "mood": "practical",
+    "context": "full disclaimer this is a super long episode but still it was done in one shot only expensive is a matter of value no",
+    "cross_ref_episode": 32
+  },
+  {
+    "day": 48,
+    "date_label": "February 17",
+    "quote": "Another episode about nice well it's the story of my knife.",
+    "episode": 103,
+    "episode_title": "Story Of My Knife",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "Story Of My",
+    "mood": "inspiring",
+    "context": "and another episode about nice well it's the story of my knife oversimplifying in some kitchens there is a tendency f",
+    "cross_ref_episode": 99
+  },
+  {
+    "day": 49,
+    "date_label": "February 18",
+    "quote": "This is really an open question kind of episode but who do we need to serve in the process the ones who want to participate or only the ones who can and.",
+    "episode": 223,
+    "episode_title": "Museum tickets",
+    "hashtag": "#customer",
+    "category": "Business & Strategy",
+    "theme": "Process Thinking",
+    "mood": "inspiring",
+    "context": "this is really an open question kind of episode but who do we need to serve in the process the ones who want to parti",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 50,
+    "date_label": "February 19",
+    "quote": "You know that standardization is actually a form of creativity.",
+    "episode": 12,
+    "episode_title": "Standardization",
+    "hashtag": "#creativity",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Standardization",
+    "mood": "philosophical",
+    "context": "did you know that standardization is actually a form of creativity it won't surprise you that the word standard actua",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 51,
+    "date_label": "February 20",
+    "quote": "Biggest challenge of tea with tea when getting closer to 200 episodes remembering what I have said.",
+    "episode": 195,
+    "episode_title": "Make Things Rememberable",
+    "hashtag": "#strategy",
+    "category": "Communication & Storytelling",
+    "theme": "Make Things Rememberable",
+    "mood": "provocative",
+    "context": "the biggest challenge of tea with tea when getting closer to 200 episodes remembering what I have said already you kn",
+    "cross_ref_episode": 249
+  },
+  {
+    "day": 52,
+    "date_label": "February 21",
+    "quote": "Honoring goods online should be simple and luckily it often is but it has not always been that way simplification can be very hard.",
+    "episode": 51,
+    "episode_title": "Simplification",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Beautiful Simplicity",
+    "mood": "practical",
+    "context": "honoring goods online should be simple and luckily it often is but it has not always been that way simplification can",
+    "cross_ref_episode": 189
+  },
+  {
+    "day": 53,
+    "date_label": "February 22",
+    "quote": "I love fine dining and in this world the chef is the.",
+    "episode": 177,
+    "episode_title": "Chef",
+    "hashtag": "#leadership",
+    "category": "Food & Culture",
+    "theme": "Chef",
+    "mood": "passionate",
+    "context": "I love fine dining and in this world the chef is the",
+    "cross_ref_episode": 134
+  },
+  {
+    "day": 54,
+    "date_label": "February 23",
+    "quote": "Most of us judge ourselves by our intentions not actions.",
+    "episode": 163,
+    "episode_title": "Verschlimmbessern Part 2",
+    "hashtag": "#change",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Verschlimmbessern Part 2",
+    "mood": "inspiring",
+    "context": "most of us judge ourselves by our intentions not actions all this episode is an interesting one teleology or deontolo",
+    "cross_ref_episode": 112
+  },
+  {
+    "day": 55,
+    "date_label": "February 24",
+    "quote": "Art and Science are intrinsically the same except for one thing the universe is in control of your science whether it's right or wrong and the public aren't in control of your art you might know the quote you might know the person who said it you...",
+    "episode": 332,
+    "episode_title": "Art and science",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Meaningful Endings",
+    "mood": "provocative",
+    "context": "Art and Science are intrinsically the same except for one thing the universe is in control of your science whether it",
+    "cross_ref_episode": 305
+  },
+  {
+    "day": 56,
+    "date_label": "February 25",
+    "quote": "Are consistently constantly and continuously in a crisis and that's okay.",
+    "episode": 21,
+    "episode_title": "Crisis",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Crisis",
+    "mood": "practical",
+    "context": "we are consistently constantly and continuously in a crisis and that's okay don't worry today you won't have to liste",
+    "cross_ref_episode": 311
+  },
+  {
+    "day": 57,
+    "date_label": "February 26",
+    "quote": "Here three messages well under a minute from just one short sentence.",
+    "episode": 146,
+    "episode_title": "Puppies And Ice Cream",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Puppies And Ice",
+    "mood": "practical",
+    "context": "here three messages well under a minute from just one short sentence and ice cream the flight were only puppies and i",
+    "cross_ref_episode": 326
+  },
+  {
+    "day": 58,
+    "date_label": "February 27",
+    "quote": "Two most impactful artifacts in the customer engagement are very simple spoiler alert it does not involve sales.",
+    "episode": 129,
+    "episode_title": "2 Customer Impacts",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Customer Centricity",
+    "mood": "playful",
+    "context": "the two most impactful artifacts in the customer engagement are very simple spoiler alert it does not involve sales w",
+    "cross_ref_episode": 249
+  },
+  {
+    "day": 59,
+    "date_label": "February 28",
+    "quote": "I have spoken a lot about processes not so much about pigeons so let's do it.",
+    "episode": 142,
+    "episode_title": "Pigeons",
+    "hashtag": "#philosophy",
+    "category": "Humor & Entertainment",
+    "theme": "Process Thinking",
+    "mood": "philosophical",
+    "context": "I have spoken a lot about processes not so much about pigeons so let's do it",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 60,
+    "date_label": "March 1",
+    "quote": "Job interview with the partner of the.",
+    "episode": 107,
+    "episode_title": "Origin Better Questions",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Origin Better Questions",
+    "mood": "philosophical",
+    "context": "Thi discusses: Today I want to share with you the origin story of why the next question should be the better question when I was ear",
+    "cross_ref_episode": 5
+  },
+  {
+    "day": 61,
+    "date_label": "March 2",
+    "quote": "It's about the ability the motivation and you need like a.",
+    "episode": 175,
+    "episode_title": "Persuasive Technologies",
+    "hashtag": "#technology",
+    "category": "Technology & AI",
+    "theme": "Persuasive Technologies",
+    "mood": "reflective",
+    "context": "and it's about the ability the motivation and you need like a trigger welcome everybody to a yet another special epis",
+    "cross_ref_episode": 117
+  },
+  {
+    "day": 62,
+    "date_label": "March 3",
+    "quote": "Of the most intelligent animals even a head of dogs are pigs today I want to talk about a popular German idiom involving kids.",
+    "episode": 112,
+    "episode_title": "Neue Sau",
+    "hashtag": "#change",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Neue Sau",
+    "mood": "philosophical",
+    "context": "one of the most intelligent animals even a head of dogs are pigs today I want to talk about a popular German idiom in",
+    "cross_ref_episode": 163
+  },
+  {
+    "day": 63,
+    "date_label": "March 4",
+    "quote": "Hailing on all frequencies process modeling or process mining AI or blockchain RPA RDA or DPA welcome to the tyranny of our episode of TFT.",
+    "episode": 16,
+    "episode_title": "Tyranny of OR",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Process Thinking",
+    "mood": "practical",
+    "context": "hailing on all frequencies process modeling or process mining AI or blockchain RPA RDA or DPA welcome to the tyranny",
+    "cross_ref_episode": 259
+  },
+  {
+    "day": 64,
+    "date_label": "March 5",
+    "quote": "Lot of the Rings meets tea with tea you shall pass.",
+    "episode": 111,
+    "episode_title": "Lotr Sam",
+    "hashtag": "#courage",
+    "category": "Career & Personal Growth",
+    "theme": "Lotr Sam",
+    "mood": "practical",
+    "context": "a lot of the Rings meets tea with tea you shall pass remember throttle from The Lord of the Rings he told Gandalf I d",
+    "cross_ref_episode": 215
+  },
+  {
+    "day": 65,
+    "date_label": "March 6",
+    "quote": "This is not the weekly recap but the recap of the week of the mini-series around process mining.",
+    "episode": 95,
+    "episode_title": "PM Part 7 recap",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "reflective",
+    "context": "this is not the weekly recap but the recap of the week of the mini-series around process mining with the interruption",
+    "cross_ref_episode": 318
+  },
+  {
+    "day": 66,
+    "date_label": "March 7",
+    "quote": "Order to understand the difference between answers and outcomes in a simple way let's meet on the other side.",
+    "episode": 60,
+    "episode_title": "The Otter Side",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Beautiful Simplicity",
+    "mood": "philosophical",
+    "context": "in order to understand the difference between answers and outcomes in a simple way let's meet on the other side Yes y",
+    "cross_ref_episode": 225
+  },
+  {
+    "day": 67,
+    "date_label": "March 8",
+    "quote": "Energy the question is how old are you I always want to reply with my date of birth and not say the number why because my age changes every year fun fact this year all of the people I know have their birthdays every single one of them another fun...",
+    "episode": 260,
+    "episode_title": "42 Bday 2",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Data-Driven Insight",
+    "mood": "philosophical",
+    "context": "nerd episode for fun today I share with you which question drains my energy the question is how old are you I always",
+    "cross_ref_episode": 226
+  },
+  {
+    "day": 68,
+    "date_label": "March 9",
+    "quote": "I've decided that one of my missions is to have my students learn by making them uncomfortable in certain acceptable sort of ways.",
+    "episode": 87,
+    "episode_title": "Loren 2Nd Part",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Lifelong Learning",
+    "mood": "philosophical",
+    "context": "I've decided that one of my missions is to have my students learn by making them uncomfortable in certain acceptable sort of ways",
+    "cross_ref_episode": 172
+  },
+  {
+    "day": 69,
+    "date_label": "March 10",
+    "quote": "While ago I revealed that crisis merely means decision but do you know what decision literally means.",
+    "episode": 22,
+    "episode_title": "Decision",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Decision Making",
+    "mood": "philosophical",
+    "context": "a while ago I revealed that crisis merely means decision but do you know what decision literally means incision Preci",
+    "cross_ref_episode": 15
+  },
+  {
+    "day": 70,
+    "date_label": "March 11",
+    "quote": "Making things more complicated than they are doesn't make things greater keeping things simple as they are doesn't diminish their value welcome to the tvt on process mining part one.",
+    "episode": 88,
+    "episode_title": "Pm Intro Part 1",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "inspiring",
+    "context": "making things more complicated than they are doesn't make things greater keeping things simple as they are doesn't di",
+    "cross_ref_episode": 318
+  },
+  {
+    "day": 71,
+    "date_label": "March 12",
+    "quote": "This special day we got tennis star wars t50 this makes us whack so don't listen to what I say but what I want to say.",
+    "episode": 94,
+    "episode_title": "May 4th",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Deep Listening",
+    "mood": "provocative",
+    "context": "Discussion about ERP, process optimization, tennis",
+    "cross_ref_episode": 115
+  },
+  {
+    "day": 72,
+    "date_label": "March 13",
+    "quote": "Let's take it vanilla today and play a.",
+    "episode": 168,
+    "episode_title": "Top 10 3 1",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Top 10 3",
+    "mood": "inspiring",
+    "context": "let's take it vanilla today and play a game if you are in the room with 100 random people what would be a skill you h",
+    "cross_ref_episode": 326
+  },
+  {
+    "day": 73,
+    "date_label": "March 14",
+    "quote": "To go from Interview questions to tenants to business Process Management.",
+    "episode": 74,
+    "episode_title": "Strengths And Weaknesses 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Process Thinking",
+    "mood": "passionate",
+    "context": "how to go from Interview questions to tenants to business Process Management the days often I was asking a job interv",
+    "cross_ref_episode": 308
+  },
+  {
+    "day": 74,
+    "date_label": "March 15",
+    "quote": "Another episode on shortcuts this one focuses on risk reward and my own personal meaning of BPM.",
+    "episode": 27,
+    "episode_title": "Shortcuts 2",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Shortcuts 2",
+    "mood": "vulnerable",
+    "context": "another episode on shortcuts this one focuses on risk reward and my own personal meaning of BPM I don't do hiking but",
+    "cross_ref_episode": 26
+  },
+  {
+    "day": 75,
+    "date_label": "March 16",
+    "quote": "Colorless green ideas sleep furiously.",
+    "episode": 31,
+    "episode_title": "Semantics",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "Semantics",
+    "mood": "practical",
+    "context": "colorless green ideas sleep furiously you probably know all the words the sentence is grammatically correct and yet i",
+    "cross_ref_episode": 305
+  },
+  {
+    "day": 76,
+    "date_label": "March 17",
+    "quote": "I have to confess something today it's not you it's me.",
+    "episode": 136,
+    "episode_title": "It's Me Not You",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "It's Me Not",
+    "mood": "practical",
+    "context": "I have to confess something today it's not you it's me",
+    "cross_ref_episode": 296
+  },
+  {
+    "day": 77,
+    "date_label": "March 18",
+    "quote": "Society prospers when old people plant trees knowing that they won't be around to sit in their.",
+    "episode": 189,
+    "episode_title": "Elliott",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "People Matter",
+    "mood": "passionate",
+    "context": "a society prospers when old people plant trees knowing that they won't be around to sit in their shade welcome to a v",
+    "cross_ref_episode": 200
+  },
+  {
+    "day": 78,
+    "date_label": "March 19",
+    "quote": "Need to be molded you need to be taking risk you need to be broken to be getting better at.",
+    "episode": 183,
+    "episode_title": "Helen",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Helen",
+    "mood": "inspiring",
+    "context": "you need to be molded you need to be taking risk you need to be broken to be getting better at things welcome everyon",
+    "cross_ref_episode": 35
+  },
+  {
+    "day": 79,
+    "date_label": "March 20",
+    "quote": "Don't worry I have not gone totally crazy yet but sorry to say collaboration is not a strategy.",
+    "episode": 62,
+    "episode_title": "Collaboration",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Strategic Thinking",
+    "mood": "provocative",
+    "context": "don't worry I have not gone totally crazy yet but sorry to say collaboration is not a strategy collaboration is impor",
+    "cross_ref_episode": 72
+  },
+  {
+    "day": 80,
+    "date_label": "March 21",
+    "quote": "Doing Simple Things very well is probably the hardest thing to do.",
+    "episode": 78,
+    "episode_title": "Simple Execution",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Beautiful Simplicity",
+    "mood": "inspiring",
+    "context": "T system but it is still a human who is going to do the execution to bring to life what matters the outcome are you a",
+    "cross_ref_episode": 125
+  },
+  {
+    "day": 81,
+    "date_label": "March 22",
+    "quote": "You want to know one of my favorite scenes in movie history.",
+    "episode": 61,
+    "episode_title": "Favorite Movie Scene",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Favorite Movie Scene",
+    "mood": "practical",
+    "context": "do you want to know one of my favorite scenes in movie history a movie from Andrew nickel dating 1997",
+    "cross_ref_episode": 159
+  },
+  {
+    "day": 82,
+    "date_label": "March 23",
+    "quote": "Super bad timing and he said why because just this very morning I discussed with the with the other Founders that we want to expand to Singapore welcome everyone to an extremely special episode of t with te today I am joined with goo welcome...",
+    "episode": 247,
+    "episode_title": "x Gero",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Defining Success",
+    "mood": "passionate",
+    "context": "super bad timing and he said why because just this very morning I discussed with the with the other Founders that we",
+    "cross_ref_episode": 78
+  },
+  {
+    "day": 83,
+    "date_label": "March 24",
+    "quote": "Ag and belief best Epoch foolishness it it off off the the times was was wor them.",
+    "episode": 191,
+    "episode_title": "All In Order",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Ag and belief best Epoch foolishness it it it it off off off the the the the times times was was was was wor them",
+    "cross_ref_episode": 243
+  },
+  {
+    "day": 84,
+    "date_label": "March 25",
+    "quote": "There is no free lunch it's a too limited view there is freelance but it could be very expensive.",
+    "episode": 157,
+    "episode_title": "Free Lunch",
+    "hashtag": "#philosophy",
+    "category": "Business & Strategy",
+    "theme": "Free Lunch",
+    "mood": "philosophical",
+    "context": "there is no free lunch it's a too limited view there is freelance but it could be very expensive I got a free lunch i",
+    "cross_ref_episode": 37
+  },
+  {
+    "day": 85,
+    "date_label": "March 26",
+    "quote": "Fact all tea come from the same plant.",
+    "episode": 59,
+    "episode_title": "Tea Origin",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Tea Origin",
+    "mood": "passionate",
+    "context": "fun fact all tea come from the same plant maybe you don't know it yet but ulti whether green yellow white oolong blac",
+    "cross_ref_episode": 53
+  },
+  {
+    "day": 86,
+    "date_label": "March 27",
+    "quote": "Bad Business advice bring I.T and business together especially for your I.T transformation activities so bad let me explain.",
+    "episode": 7,
+    "episode_title": "IT and business",
+    "hashtag": "#transformation",
+    "category": "Communication & Storytelling",
+    "theme": "Driving Transformation",
+    "mood": "inspiring",
+    "context": "Bad Business advice bring I.T and business together especially for your I.T transformation activities so bad let me explain",
+    "cross_ref_episode": 3
+  },
+  {
+    "day": 87,
+    "date_label": "March 28",
+    "quote": "Growing up the best tennis coaches I had were not always the best tennis players and sometimes the most skilled people are the worst coaches in my experience the best teachers don't teach at all.",
+    "episode": 43,
+    "episode_title": "Teaching Skills",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Court Wisdom",
+    "mood": "playful",
+    "context": "growing up the best tennis coaches I had were not always the best tennis players and sometimes the most skilled peopl",
+    "cross_ref_episode": 4
+  },
+  {
+    "day": 88,
+    "date_label": "March 29",
+    "quote": "All is fair in Love and War at that ain't.",
+    "episode": 237,
+    "episode_title": "nice guy",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "nice guy",
+    "mood": "passionate",
+    "context": "All is fair in Love and War at that ain't",
+    "cross_ref_episode": 357
+  },
+  {
+    "day": 89,
+    "date_label": "March 30",
+    "quote": "What is the meaning of loyalty what does loyalty mean to you for you.",
+    "episode": 153,
+    "episode_title": "Loyalty",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Loyalty",
+    "mood": "philosophical",
+    "context": "what is the meaning of loyalty what does loyalty mean to you for you etymology aside you might have known that a loya",
+    "cross_ref_episode": 100
+  },
+  {
+    "day": 90,
+    "date_label": "March 31",
+    "quote": "This year Christmas came as a surprise.",
+    "episode": 167,
+    "episode_title": "Christmas Surprise",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Christmas Surprise",
+    "mood": "philosophical",
+    "context": "this year Christmas came as a surprise again in zens the fiscal year starts today on October 1st and when I was in th",
+    "cross_ref_episode": 190
+  },
+  {
+    "day": 91,
+    "date_label": "April 1",
+    "quote": "When you're playing Zelda, you are usually not playing the character Zelda.",
+    "episode": 104,
+    "episode_title": "Zelda",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Hidden Assumptions",
+    "mood": "playful",
+    "context": "Thi uses gaming to illustrate how we make wrong assumptions about who the main character is",
+    "cross_ref_episode": 115
+  },
+  {
+    "day": 92,
+    "date_label": "April 2",
+    "quote": "Expertise experimentation experience words related to expert if someone is an expert it does not necessarily mean that this person is really good at something this is just one logical consequence of being an expert no a true expert focuses on the...",
+    "episode": 25,
+    "episode_title": "Expert APE 3",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Defining Success",
+    "mood": "provocative",
+    "context": "episode 3 of the ape Trilogy after the episodes of amateur and professional let's hear about the concluding episode c",
+    "cross_ref_episode": 194
+  },
+  {
+    "day": 93,
+    "date_label": "April 3",
+    "quote": "Got me all my posts are based on AI sorry to let you down.",
+    "episode": 158,
+    "episode_title": "Ai Created",
+    "hashtag": "#ai",
+    "category": "Technology & AI",
+    "theme": "Ai Created",
+    "mood": "inspiring",
+    "context": "you got me all my posts are based on AI sorry to let you down so if you have a day a follower on LinkedIn called me o",
+    "cross_ref_episode": 110
+  },
+  {
+    "day": 94,
+    "date_label": "April 4",
+    "quote": "I love politics I hope you do too.",
+    "episode": 69,
+    "episode_title": "Politics",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Politics",
+    "mood": "passionate",
+    "context": "I love politics I hope you do too",
+    "cross_ref_episode": 116
+  },
+  {
+    "day": 95,
+    "date_label": "April 5",
+    "quote": "There are scenarios when I don't have the budget is an unacceptable statement.",
+    "episode": 151,
+    "episode_title": "I Am The Budget",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "I Am The",
+    "mood": "provocative",
+    "context": "there are scenarios when I don't have the budget is an unacceptable statement this small story happened probably arou",
+    "cross_ref_episode": 347
+  },
+  {
+    "day": 96,
+    "date_label": "April 6",
+    "quote": "Ready to cancel me yet do not take me out of context but please stop the talk about.",
+    "episode": 40,
+    "episode_title": "compassion",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "compassion",
+    "mood": "provocative",
+    "context": "ready to cancel me yet do not take me out of context but please stop the talk about episode 40 so yes I wanted to mak",
+    "cross_ref_episode": 79
+  },
+  {
+    "day": 97,
+    "date_label": "April 7",
+    "quote": "Much does it cost as actually asking for the price deciding to buy or not that's the value.",
+    "episode": 41,
+    "episode_title": "Cost Price Value",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Creating Value",
+    "mood": "practical",
+    "context": "how much does it cost as actually asking for the price deciding to buy or not that's the value cost price and value v",
+    "cross_ref_episode": 38
+  },
+  {
+    "day": 98,
+    "date_label": "April 8",
+    "quote": "Addition is a type of change but not every change must be an addition.",
+    "episode": 48,
+    "episode_title": "Change",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Embracing Change",
+    "mood": "inspiring",
+    "context": "addition is a type of change but not every change must be an addition let's talk SQL for a second why not statement a",
+    "cross_ref_episode": 243
+  },
+  {
+    "day": 99,
+    "date_label": "April 9",
+    "quote": "My hair is black my blood is red my skin is yellow maybe even gold yes of course I am a German here we go again one of my most favorite openings when well when anything but especially today is the 3rd of October German Unity day commemorating the...",
+    "episode": 279,
+    "episode_title": "October 3 Reunification",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Embracing Complexity",
+    "mood": "provocative",
+    "context": "my hair is black my blood is red my skin is yellow maybe even gold yes of course I am a German here we go again one o",
+    "cross_ref_episode": 63
+  },
+  {
+    "day": 100,
+    "date_label": "April 10",
+    "quote": "When was the last time you intentionally said I am breathing.",
+    "episode": 34,
+    "episode_title": "So Normal",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "when was the last time you intentionally said I am breathing if you are exercising whether it's yoga or running you d",
+    "cross_ref_episode": 266
+  },
+  {
+    "day": 101,
+    "date_label": "April 11",
+    "quote": "This story has been nearly 13 years in the making and it is too good not to share.",
+    "episode": 140,
+    "episode_title": "Lack Of Ownership",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Lack Of Ownership",
+    "mood": "reflective",
+    "context": "this story has been nearly 13 years in the making and it is too good not to share greetings from Madrid today is a ha",
+    "cross_ref_episode": 18
+  },
+  {
+    "day": 102,
+    "date_label": "April 12",
+    "quote": "Videos welcome to episode 199 of te with tea nearly the end of season 2 today I'm joined by Isabelle but Isabelle why don't you introduce yourself a little bit yes hola um my name is Isabel Moreno I'm 22 years old and I'm his Spanish um I made T...",
+    "episode": 199,
+    "episode_title": "Social Engagement X Isabel",
+    "hashtag": "#culture",
+    "category": "Communication & Storytelling",
+    "theme": "Lifelong Learning",
+    "mood": "practical",
+    "context": "hello Isabelle what kind of uh social media platforms do you use mainly I use Tik Tok and Instagram and you what abou",
+    "cross_ref_episode": 190
+  },
+  {
+    "day": 103,
+    "date_label": "April 13",
+    "quote": "What is better than increasing automation or reducing rework of course is automating rework.",
+    "episode": 91,
+    "episode_title": "PM Automating Rework Part 4 1",
+    "hashtag": "#innovation",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Smart Automation",
+    "mood": "practical",
+    "context": "what is better than increasing automation or reducing rework of course is automating rework welcome to part 4 of proc",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 104,
+    "date_label": "April 14",
+    "quote": "Bashing today but a hard pillow to swallow.",
+    "episode": 174,
+    "episode_title": "Knowing Whats Good",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Knowing Whats Good",
+    "mood": "passionate",
+    "context": "no bashing today but a hard pillow to swallow nonetheless sometimes we know what is not good for example we listen to",
+    "cross_ref_episode": 141
+  },
+  {
+    "day": 105,
+    "date_label": "April 15",
+    "quote": "A successful transformation this approach has always worked out for me.",
+    "episode": 2,
+    "episode_title": "Middle Ground",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Defining Success",
+    "mood": "practical",
+    "context": "for a successful transformation this approach has always worked out for me set the top down context but focus on the",
+    "cross_ref_episode": 62
+  },
+  {
+    "day": 106,
+    "date_label": "April 16",
+    "quote": "I'm trying to build a community around books and trying making reading seem sexy and cool.",
+    "episode": 96,
+    "episode_title": "Avdhoot",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Avdhoot",
+    "mood": "practical",
+    "context": "I'm trying to build a community around books and trying making making reading seem sexy and cool",
+    "cross_ref_episode": 317
+  },
+  {
+    "day": 107,
+    "date_label": "April 17",
+    "quote": "Tennis with tuft ainset the first strike today serves you right.",
+    "episode": 98,
+    "episode_title": "Serve",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Court Wisdom",
+    "mood": "practical",
+    "context": "tennis with tuft ainset the first strike today serves you right for many beginners the surf is the most complex of th",
+    "cross_ref_episode": 219
+  },
+  {
+    "day": 108,
+    "date_label": "April 18",
+    "quote": "First rule of Danny Krueger club you do not know you are in the dining Kruger Club.",
+    "episode": 54,
+    "episode_title": "Dunning Kruger",
+    "hashtag": "#humor",
+    "category": "Humor & Entertainment",
+    "theme": "Dunning Kruger",
+    "mood": "practical",
+    "context": "the first rule of Danny Krueger club you do not know you are in the dining Kruger Club vice versa if you know about D",
+    "cross_ref_episode": 208
+  },
+  {
+    "day": 109,
+    "date_label": "April 19",
+    "quote": "What is one of the most common mistakes done on a daily basis especially when it comes to applying insights from data.",
+    "episode": 44,
+    "episode_title": "Correlation Causality",
+    "hashtag": "#science",
+    "category": "Science & Physics",
+    "theme": "Data-Driven Insight",
+    "mood": "provocative",
+    "context": "what is one of the most common mistakes done on a daily basis especially when it comes to applying insights from data",
+    "cross_ref_episode": 337
+  },
+  {
+    "day": 110,
+    "date_label": "April 20",
+    "quote": "Wise person might have lots of experience but the person with lots of experience does not have to be wise.",
+    "episode": 122,
+    "episode_title": "Wisdom",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Wisdom",
+    "mood": "philosophical",
+    "context": "a wise person might have lots of experience but the person with lots of experience does not have to be wise we can me",
+    "cross_ref_episode": 200
+  },
+  {
+    "day": 111,
+    "date_label": "April 21",
+    "quote": "Want to be successful remember these three images Nike The Beatles Frozen.",
+    "episode": 63,
+    "episode_title": "Nike Beatles Elsa",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Defining Success",
+    "mood": "inspiring",
+    "context": "want to be successful remember these three images Nike The Beatles Frozen despite all my efforts of finding the secre",
+    "cross_ref_episode": 190
+  },
+  {
+    "day": 112,
+    "date_label": "April 22",
+    "quote": "There I just wanted to make sure everyone knows that I do have legs already they are not staged today we talk about absolutes they are absolutely useless.",
+    "episode": 37,
+    "episode_title": "Absolute",
+    "hashtag": "#philosophy",
+    "category": "Science & Physics",
+    "theme": "Absolute",
+    "mood": "passionate",
+    "context": "hi there I just wanted to make sure everyone knows that I do have legs already they are not staged today we talk abou",
+    "cross_ref_episode": 277
+  },
+  {
+    "day": 113,
+    "date_label": "April 23",
+    "quote": "Mad Hatter's tea party continues yes we do the wrong things but they support the right thing part two.",
+    "episode": 58,
+    "episode_title": "Wrong But Right Pt2",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Wrong But Right",
+    "mood": "provocative",
+    "context": "Mad Hatter's tea party continues yes we do the wrong things but they support the right thing part two",
+    "cross_ref_episode": 261
+  },
+  {
+    "day": 114,
+    "date_label": "April 24",
+    "quote": "Let's conclude the story of cleaning up basements before dancing on the next party.",
+    "episode": 56,
+    "episode_title": "Basement Vs Rooftops Pt2",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Basement Vs Rooftops",
+    "mood": "practical",
+    "context": "Discussion about ERP, SAP, sustainability",
+    "cross_ref_episode": 247
+  },
+  {
+    "day": 115,
+    "date_label": "April 25",
+    "quote": "I missed the memo but since when is every robot and Ai and every AI a robot.",
+    "episode": 120,
+    "episode_title": "Robot Ai",
+    "hashtag": "#philosophy",
+    "category": "Technology & AI",
+    "theme": "Robot Ai",
+    "mood": "reflective",
+    "context": "I missed the memo but since when is every robot and Ai and every AI a robot",
+    "cross_ref_episode": 30
+  },
+  {
+    "day": 116,
+    "date_label": "April 26",
+    "quote": "Sometimes I hear I don't care about process I care about outcomes.",
+    "episode": 155,
+    "episode_title": "Process, Outcomes, Process Of Outcomes",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "provocative",
+    "context": "sometimes I hear I don't care about process I care about outcomes well I could probably do multiple episodes on this",
+    "cross_ref_episode": 260
+  },
+  {
+    "day": 117,
+    "date_label": "April 27",
+    "quote": "Welcome everyone to a special episode of tea with tea today I'm joined by local Club but Moko why don't you just introduce yourself yeah welcome also from my side it's great to be your guest even if I don't drink tea at all but maybe water with...",
+    "episode": 137,
+    "episode_title": "Mirko Trust 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Building Trust",
+    "mood": "practical",
+    "context": "yeah it can be so simple but it's so complicated in reality welcome everyone to a special episode of tea with tea tod",
+    "cross_ref_episode": 56
+  },
+  {
+    "day": 118,
+    "date_label": "April 28",
+    "quote": "Just lost a set at tennis let me tell you why.",
+    "episode": 152,
+    "episode_title": "Tennis Lost",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Court Wisdom",
+    "mood": "philosophical",
+    "context": "just lost a set at tennis let me tell you why the strings were too soft and the Sun was shining into my face and don'",
+    "cross_ref_episode": 65
+  },
+  {
+    "day": 119,
+    "date_label": "April 29",
+    "quote": "Activity episode is a personal anecdote about corporate math and human math let's see what is your answer to my question today.",
+    "episode": 20,
+    "episode_title": "Corporate Math Human Math",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Corporate Math Human",
+    "mood": "vulnerable",
+    "context": "activity episode is a personal anecdote about corporate math and human math let's see what is your answer to my quest",
+    "cross_ref_episode": 237
+  },
+  {
+    "day": 120,
+    "date_label": "April 30",
+    "quote": "I think it's it's more important than ever because uh we have this increased urgency now every month to get the um SAP business community over into the s4hana space.",
+    "episode": 79,
+    "episode_title": "Barry",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Barry",
+    "mood": "passionate",
+    "context": "I think it's it's more important than ever because uh we have this increased urgency now every month to get the um sa",
+    "cross_ref_episode": 121
+  },
+  {
+    "day": 121,
+    "date_label": "May 1",
+    "quote": "Content is King, but context is King Kong.",
+    "episode": 15,
+    "episode_title": "Context",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Context Matters",
+    "mood": "reflective",
+    "context": "Thi explains why context always trumps content in transformation",
+    "cross_ref_episode": 139
+  },
+  {
+    "day": 122,
+    "date_label": "May 2",
+    "quote": "Spoiler alert it gets even spicier okay now it is official I have gone crazy I love bureaucracy.",
+    "episode": 68,
+    "episode_title": "Bureaucracy",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Bureaucracy",
+    "mood": "playful",
+    "context": "spoiler alert it gets even spicier okay now it is official I have gone crazy I love bureaucracy red taper or crazy bu",
+    "cross_ref_episode": 107
+  },
+  {
+    "day": 123,
+    "date_label": "May 3",
+    "quote": "Process Mining and medical devices language devices.",
+    "episode": 83,
+    "episode_title": "Medical Devices",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "inspiring",
+    "context": "process Mining and medical devices language devices there are quite a lot of analogies floating around to explain pro",
+    "cross_ref_episode": 318
+  },
+  {
+    "day": 124,
+    "date_label": "May 4",
+    "quote": "You know what I find quite unintelligent the way we use the word intelligence.",
+    "episode": 10,
+    "episode_title": "Intelligence",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Intelligence",
+    "mood": "reflective",
+    "context": "Discussion about SAP, data, artificial intelligence",
+    "cross_ref_episode": 57
+  },
+  {
+    "day": 125,
+    "date_label": "May 5",
+    "quote": "When I say let's take a shortcut how does that make you feel.",
+    "episode": 26,
+    "episode_title": "Shortcuts 1",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Shortcuts 1",
+    "mood": "practical",
+    "context": "when I say let's take a shortcut how does that make you feel Memory Lane childhood road trips in the car with the fam",
+    "cross_ref_episode": 28
+  },
+  {
+    "day": 126,
+    "date_label": "May 6",
+    "quote": "What the fork I'm forking out.",
+    "episode": 154,
+    "episode_title": "Wtfork",
+    "hashtag": "#humor",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Wtfork",
+    "mood": "passionate",
+    "context": "what the fork I'm forking out this is a day the day has come where I have to announce that I'm going different direct",
+    "cross_ref_episode": 54
+  },
+  {
+    "day": 127,
+    "date_label": "May 7",
+    "quote": "You know the difference between anal and.",
+    "episode": 164,
+    "episode_title": "Difference Between Anal And Analytics",
+    "hashtag": "#humor",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Difference Between Anal",
+    "mood": "philosophical",
+    "context": "do you know the difference between anal and analytics one is Latin one is Greek the end okay okay maybe not let's tal",
+    "cross_ref_episode": 271
+  },
+  {
+    "day": 128,
+    "date_label": "May 8",
+    "quote": "For discussion there are only six Strokes in tennis.",
+    "episode": 160,
+    "episode_title": "Tennis Foundations",
+    "hashtag": "#tennis",
+    "category": "Education & Learning",
+    "theme": "Court Wisdom",
+    "mood": "reflective",
+    "context": "up for discussion there are only six Strokes in tennis they are number one there is to serve number two there's the f",
+    "cross_ref_episode": 219
+  },
+  {
+    "day": 129,
+    "date_label": "May 9",
+    "quote": "People are your greatest assets so I hear so let's do Finance on that statement.",
+    "episode": 80,
+    "episode_title": "People Assets",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "People Matter",
+    "mood": "reflective",
+    "context": "people are your greatest assets so I hear so let's do Finance on that statement when it comes to assets there are man",
+    "cross_ref_episode": 237
+  },
+  {
+    "day": 130,
+    "date_label": "May 10",
+    "quote": "I like to serve yet there's a point of return.",
+    "episode": 102,
+    "episode_title": "Return",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Return",
+    "mood": "philosophical",
+    "context": "I like to serve yet there's a point of return",
+    "cross_ref_episode": 50
+  },
+  {
+    "day": 131,
+    "date_label": "May 11",
+    "quote": "Have more in common than what divides us sounds great but we can do better.",
+    "episode": 67,
+    "episode_title": "Pluralism",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Pluralism",
+    "mood": "inspiring",
+    "context": "we have more in common than what divides us sounds great but we can do better this is going to be one of the most com",
+    "cross_ref_episode": 192
+  },
+  {
+    "day": 132,
+    "date_label": "May 12",
+    "quote": "Another Trilogy the ape the ape Saga first episode a for amateur.",
+    "episode": 23,
+    "episode_title": "Amateur APE",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Amateur APE",
+    "mood": "practical",
+    "context": "another Trilogy the ape the ape Saga first episode a for amateur you guessed it right amateur has a totally different",
+    "cross_ref_episode": 29
+  },
+  {
+    "day": 133,
+    "date_label": "May 13",
+    "quote": "Your answer spells out the sentence let's start what did Arthur see when you open the window from his house.",
+    "episode": 42,
+    "episode_title": "42",
+    "hashtag": "#nerd",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "New Beginnings",
+    "mood": "passionate",
+    "context": "Special episode 42: 41 trivia questions about Hitchhiker's Guide to the Galaxy. First letters of answers spell out a hid",
+    "cross_ref_episode": 7
+  },
+  {
+    "day": 134,
+    "date_label": "May 14",
+    "quote": "Yeah it can be so simple but it's so complicated in reality.",
+    "episode": 137,
+    "episode_title": "Mirko Trust 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Beautiful Simplicity",
+    "mood": "philosophical",
+    "context": "yeah it can be so simple but it's so complicated in reality welcome everyone to a special episode of tea with tea tod",
+    "cross_ref_episode": 325
+  },
+  {
+    "day": 135,
+    "date_label": "May 15",
+    "quote": "To define success in as many ways as possible and you will always be successful.",
+    "episode": 5,
+    "episode_title": "Success",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Defining Success",
+    "mood": "inspiring",
+    "context": "try to define success in as many ways as possible and you will always be successful one of the most important aspects",
+    "cross_ref_episode": 40
+  },
+  {
+    "day": 136,
+    "date_label": "May 16",
+    "quote": "This episode is dedicated to Diogo shout out to my fellow inner today I will show you the marvels of AI in this new episode of t with tea listen.",
+    "episode": 291,
+    "episode_title": "Steve Jobs or Wozniak",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Deep Listening",
+    "mood": "practical",
+    "context": "this episode is dedicated to Diogo shout out to my fellow inner today I will show you the marvels of AI in this new e",
+    "cross_ref_episode": 72
+  },
+  {
+    "day": 137,
+    "date_label": "May 17",
+    "quote": "Thank you stop your doom scrolling for more than a minute and apologies for some original content on your feed well meta content.",
+    "episode": 147,
+    "episode_title": "Dimensions Of Change",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Dimensions Of Change",
+    "mood": "provocative",
+    "context": "thank you stop your doom scrolling for more than a minute and apologies for some original content on your feed well m",
+    "cross_ref_episode": 55
+  },
+  {
+    "day": 138,
+    "date_label": "May 18",
+    "quote": "Ever heard or said I don't have the budget for it we all have been in that same place today I tried to offer a new point of view to the all too common situation.",
+    "episode": 14,
+    "episode_title": "No Budget",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "No Budget",
+    "mood": "provocative",
+    "context": "ever heard or said I don't have the budget for it we all have been in that same place today I tried to offer a new po",
+    "cross_ref_episode": 36
+  },
+  {
+    "day": 139,
+    "date_label": "May 19",
+    "quote": "Courage comes from corn and poor means heart.",
+    "episode": 72,
+    "episode_title": "Courage V2",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Finding Courage",
+    "mood": "passionate",
+    "context": "Discussion about SAP, courage, confidence",
+    "cross_ref_episode": 296
+  },
+  {
+    "day": 140,
+    "date_label": "May 20",
+    "quote": "Nerd episode for fun today I share with you which question drains my.",
+    "episode": 260,
+    "episode_title": "42 Bday 2",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "42 Bday 2",
+    "mood": "reflective",
+    "context": "nerd episode for fun today I share with you which question drains my energy the question is how old are you I always",
+    "cross_ref_episode": 132
+  },
+  {
+    "day": 141,
+    "date_label": "May 21",
+    "quote": "There is one single best practice that I would bring up to avoid what you mentioned is definitely I would call it.",
+    "episode": 141,
+    "episode_title": "Alex G The Ugly",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Alex G The",
+    "mood": "practical",
+    "context": "if there is one single best practice that I would bring up to avoid what you mentioned is definitely I would call it",
+    "cross_ref_episode": 143
+  },
+  {
+    "day": 142,
+    "date_label": "May 22",
+    "quote": "Bitter pill to swallow I prefer having real problems fixed before buying into the new flashy stuff.",
+    "episode": 55,
+    "episode_title": "Basement Vs Rooftops Pt1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Basement Vs Rooftops",
+    "mood": "reflective",
+    "context": "bitter pill to swallow I prefer having real problems fixed before buying into the new flashy stuff imagine you have a",
+    "cross_ref_episode": 43
+  },
+  {
+    "day": 143,
+    "date_label": "May 23",
+    "quote": "Like in T-Bone iced tea teaspoon tea with tea but also t-shirts.",
+    "episode": 115,
+    "episode_title": "T Shirts",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "T Shirts",
+    "mood": "reflective",
+    "context": "tea like in T-Bone iced tea teaspoon tea with tea but also t-shirts working wearing collared shirts with ties was nor",
+    "cross_ref_episode": 186
+  },
+  {
+    "day": 144,
+    "date_label": "May 24",
+    "quote": "Sometimes people make mistakes but it is not their mistake it was.",
+    "episode": 186,
+    "episode_title": "Address",
+    "hashtag": "#culture",
+    "category": "Communication & Storytelling",
+    "theme": "Time Well Spent",
+    "mood": "provocative",
+    "context": "sometimes people make mistakes but it is not their mistake it was yours a while ago I've asked my brother to send a p",
+    "cross_ref_episode": 352
+  },
+  {
+    "day": 145,
+    "date_label": "May 25",
+    "quote": "Know same but different already today we talk about different but same.",
+    "episode": 192,
+    "episode_title": "Different Different",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Different Different",
+    "mood": "philosophical",
+    "context": "you know same same but different already today we talk about different different but same tune sorry I couldn't let i",
+    "cross_ref_episode": 260
+  },
+  {
+    "day": 146,
+    "date_label": "May 26",
+    "quote": "I love the topic learning I studied organizational psychology I think learning is Evergreen.",
+    "episode": 76,
+    "episode_title": "Learning",
+    "hashtag": "#leadership",
+    "category": "Education & Learning",
+    "theme": "Lifelong Learning",
+    "mood": "passionate",
+    "context": "I love the topic learning I studied organizational psychology I think learning is Evergreen",
+    "cross_ref_episode": 213
+  },
+  {
+    "day": 147,
+    "date_label": "May 27",
+    "quote": "You getting sick and tired of my food metaphors and movie references well sue me and see you on the court.",
+    "episode": 65,
+    "episode_title": "Tennis",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Food For Thought",
+    "mood": "reflective",
+    "context": "are you getting sick and tired of my food metaphors and movie references well sue me and see you on the court well th",
+    "cross_ref_episode": 152
+  },
+  {
+    "day": 148,
+    "date_label": "May 28",
+    "quote": "Sure you got some insurances now do you want to get ill.",
+    "episode": 84,
+    "episode_title": "Insurance",
+    "hashtag": "#economics",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Insurance",
+    "mood": "passionate",
+    "context": "sure you got some insurances now do you want to get ill that most of us are adequately covered by insurances health i",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 149,
+    "date_label": "May 29",
+    "quote": "Only lesson to be learned in major business initiatives is that Lessons Learned can be planned but can't be told before you finish something.",
+    "episode": 131,
+    "episode_title": "Lessons Learned",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Lifelong Learning",
+    "mood": "practical",
+    "context": "the only lesson to be learned in major business initiatives is that Lessons Learned can be planned but can't be told",
+    "cross_ref_episode": 291
+  },
+  {
+    "day": 150,
+    "date_label": "May 30",
+    "quote": "What do dinosaurs have to do with process mining stay tuned and find out.",
+    "episode": 93,
+    "episode_title": "PM Part 6 Dinosaurs",
+    "hashtag": "#change",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "inspiring",
+    "context": "what do dinosaurs have to do with process mining stay tuned and find out I planned one episode on process mining now",
+    "cross_ref_episode": 66
+  },
+  {
+    "day": 151,
+    "date_label": "May 31",
+    "quote": "Cost, price, and value \u2014 very common words, often used synonymously, though they are very different concepts altogether.",
+    "episode": 41,
+    "episode_title": "Cost Price Value",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Value vs Price",
+    "mood": "inspiring",
+    "context": "Thi draws from his experience as global pricing manager at Siemens",
+    "cross_ref_episode": 176
+  },
+  {
+    "day": 152,
+    "date_label": "June 1",
+    "quote": "Price rise ice sounds similar different meaning Vietnam China same but different.",
+    "episode": 53,
+    "episode_title": "Same Same",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Same Same",
+    "mood": "philosophical",
+    "context": "price rise ice sounds similar different meaning Vietnam China same same but different so Sophie should we compare app",
+    "cross_ref_episode": 189
+  },
+  {
+    "day": 153,
+    "date_label": "June 2",
+    "quote": "Often call it the s word because it's almost a bit of an expletive in my head.",
+    "episode": 82,
+    "episode_title": "Malachy The S Word",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Malachy The S",
+    "mood": "philosophical",
+    "context": "often call it the s word because it's almost a bit of an expletive in my head all right so welcome to a special episo",
+    "cross_ref_episode": 107
+  },
+  {
+    "day": 154,
+    "date_label": "June 3",
+    "quote": "Hype cycle with side of time welcome to part 5 of process mining meets t with.",
+    "episode": 92,
+    "episode_title": "Part 5 Cycle time",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "philosophical",
+    "context": "the hype cycle with side of time welcome to part 5 of process mining meets t with Tyco time is one of the most import",
+    "cross_ref_episode": 49
+  },
+  {
+    "day": 155,
+    "date_label": "June 4",
+    "quote": "Fashion and circus of passion and purpose.",
+    "episode": 159,
+    "episode_title": "Fashion And Circus",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Following Passion",
+    "mood": "passionate",
+    "context": "the fashion and circus of passion and purpose you must have a purpose and follow your passion but is having a purpose",
+    "cross_ref_episode": 61
+  },
+  {
+    "day": 156,
+    "date_label": "June 5",
+    "quote": "Good times make good memories and bad times make great lessons.",
+    "episode": 50,
+    "episode_title": "Intelligent Meta",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Good times make good memories and bad times make great lessons",
+    "cross_ref_episode": 57
+  },
+  {
+    "day": 157,
+    "date_label": "June 6",
+    "quote": "Reconfirm the what even it has not changed the why might have changed.",
+    "episode": 123,
+    "episode_title": "Reconfirm",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Embracing Change",
+    "mood": "inspiring",
+    "context": "reconfirm the what even it has not changed the why might have changed imagine you are the assistant coach of the foot",
+    "cross_ref_episode": 6
+  },
+  {
+    "day": 158,
+    "date_label": "June 7",
+    "quote": "You talk to any vet any defense person he will tell you what his goals are Point black we need to take that and may buy him into corporate culture.",
+    "episode": 116,
+    "episode_title": "Ramesh 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Cultural Intelligence",
+    "mood": "practical",
+    "context": "Discussion about trust, ERP, process optimization",
+    "cross_ref_episode": 140
+  },
+  {
+    "day": 159,
+    "date_label": "June 8",
+    "quote": "Here's the next T witht going wild Oscar wild one needs Misfortune to live.",
+    "episode": 266,
+    "episode_title": "Unhappiness",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Unhappiness",
+    "mood": "practical",
+    "context": "here's the next T witht going wild Oscar wild one needs Misfortune to live happily witty yes true yes unfortunately t",
+    "cross_ref_episode": 226
+  },
+  {
+    "day": 160,
+    "date_label": "June 9",
+    "quote": "Everyone who worked with me always had to endure at some point a situation like this I should put this line into a book which I will write in the near.",
+    "episode": 316,
+    "episode_title": "a line in the book",
+    "hashtag": "#philosophy",
+    "category": "Literature & Language",
+    "theme": "Meaningful Endings",
+    "mood": "practical",
+    "context": "everyone who worked with me always had to endure at some point a situation like this I should put this line into a bo",
+    "cross_ref_episode": 259
+  },
+  {
+    "day": 161,
+    "date_label": "June 10",
+    "quote": "Come on of course it's tea do you want some bad business advice today in order to improve your processes you need to focus more on your processes.",
+    "episode": 9,
+    "episode_title": "Process",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "passionate",
+    "context": "oh come on of course it's tea do you want some bad business advice today in order to improve your processes you need",
+    "cross_ref_episode": 60
+  },
+  {
+    "day": 162,
+    "date_label": "June 11",
+    "quote": "Eight Mile algorithm LinkedIn this is the Friday fun episode of tea with tea.",
+    "episode": 32,
+    "episode_title": "Better Run",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Better Run",
+    "mood": "philosophical",
+    "context": "Eight Mile algorithm LinkedIn this is the Friday fun episode of tea with tea",
+    "cross_ref_episode": 49
+  },
+  {
+    "day": 163,
+    "date_label": "June 12",
+    "quote": "Best learning experiences are often based on the worst ones.",
+    "episode": 117,
+    "episode_title": "It From Hell",
+    "hashtag": "#technology",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Lifelong Learning",
+    "mood": "playful",
+    "context": "the best learning experiences are often based on the worst ones I just recently did a podcast and was asked about the",
+    "cross_ref_episode": 353
+  },
+  {
+    "day": 164,
+    "date_label": "June 13",
+    "quote": "Today I will go down memory lane because the line that's not my fault is still as useless as it used to be I was the regional CIO of Vietnam who had just implemented two SAP RP systems in the early 2000s Back in the Days International internet...",
+    "episode": 36,
+    "episode_title": "Fault and Responsibility",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Leading With Purpose",
+    "mood": "practical",
+    "context": "today I will go down memory lane because the line that's not my fault is still as useless as it used to be I was the",
+    "cross_ref_episode": 185
+  },
+  {
+    "day": 165,
+    "date_label": "June 14",
+    "quote": "Commodities lately prices of many Commodities go up but how about their value and in Tech why is there such shaming when something becomes a commodity.",
+    "episode": 38,
+    "episode_title": "commodities",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Creating Value",
+    "mood": "inspiring",
+    "context": "Commodities lately prices of many Commodities go up but how about their value and in Tech why is there such shaming w",
+    "cross_ref_episode": 52
+  },
+  {
+    "day": 166,
+    "date_label": "June 15",
+    "quote": "Under one minute you will find out the quickest way to improve the situation when you are stuck with the problem.",
+    "episode": 109,
+    "episode_title": "Uncle Iroh",
+    "hashtag": "#leadership",
+    "category": "Humor & Entertainment",
+    "theme": "Uncle Iroh",
+    "mood": "passionate",
+    "context": "Discussion about music",
+    "cross_ref_episode": 118
+  },
+  {
+    "day": 167,
+    "date_label": "June 16",
+    "quote": "Can say it both ways doesn't mean it can work both ways.",
+    "episode": 132,
+    "episode_title": "Both Ways",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "Both Ways",
+    "mood": "philosophical",
+    "context": "you can say it both ways doesn't mean it can work both ways let's revisit a catchphrase of mine every square is a rec",
+    "cross_ref_episode": 216
+  },
+  {
+    "day": 168,
+    "date_label": "June 17",
+    "quote": "Knowing you will never be back at 100% is one of the most comforting troops in.",
+    "episode": 187,
+    "episode_title": "100 Percent",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "100 Percent",
+    "mood": "practical",
+    "context": "knowing you will never be back at 100% is one of the most comforting troops in life in Practical terms if you hit 999",
+    "cross_ref_episode": 14
+  },
+  {
+    "day": 169,
+    "date_label": "June 18",
+    "quote": "Quote the late Albus Dumbledore it is our choices Harry that show what we truly are far more than our abilities.",
+    "episode": 30,
+    "episode_title": "Humanity",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Humanity",
+    "mood": "reflective",
+    "context": "to quote the late Albus Dumbledore it is our choices Harry that show what we truly are far more than our abilities so",
+    "cross_ref_episode": 70
+  },
+  {
+    "day": 170,
+    "date_label": "June 19",
+    "quote": "Day may come when there are no more processes to improve when we have automated everything which is relevant and I can retirees.",
+    "episode": 143,
+    "episode_title": "Continuity",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "inspiring",
+    "context": "a day may come when there are no more processes to improve when we have automated everything which is relevant and I",
+    "cross_ref_episode": 47
+  },
+  {
+    "day": 171,
+    "date_label": "June 20",
+    "quote": "Did but it doesn't mean that future.",
+    "episode": 210,
+    "episode_title": "Cannot predict the future",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Cannot predict the",
+    "mood": "inspiring",
+    "context": "Thi discusses: You cannot predict the future actually you can and probably you did but it doesn't mean that that future manifested i",
+    "cross_ref_episode": 362
+  },
+  {
+    "day": 172,
+    "date_label": "June 21",
+    "quote": "The flight were only puppies and ice.",
+    "episode": 146,
+    "episode_title": "Puppies And Ice Cream",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Puppies And Ice",
+    "mood": "practical",
+    "context": "Thi discusses: Here three messages well under a minute from just one short sentence and ice cream the flight were only puppies and i",
+    "cross_ref_episode": 17
+  },
+  {
+    "day": 173,
+    "date_label": "June 22",
+    "quote": "Talk about work life balance obviously.",
+    "episode": 273,
+    "episode_title": "Imbalance of Balance",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Imbalance of Balance",
+    "mood": "philosophical",
+    "context": "Thi discusses: Balance as a state balance over time equilibrium is real but is it always relevant just finished the run so let's tal",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 174,
+    "date_label": "June 23",
+    "quote": "Khalifa If you're not familiar with.",
+    "episode": 249,
+    "episode_title": "2nd highest building",
+    "hashtag": "#strategy",
+    "category": "Business & Strategy",
+    "theme": "2nd highest building",
+    "mood": "passionate",
+    "context": "Thi discusses: Which is the second highest building in the world after the B Khalifa If you're not familiar with southeast Asia this",
+    "cross_ref_episode": 176
+  },
+  {
+    "day": 175,
+    "date_label": "June 24",
+    "quote": "Environment when it comes to data.",
+    "episode": 253,
+    "episode_title": "1st principle",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Data-Driven Insight",
+    "mood": "inspiring",
+    "context": "Thi discusses: Welcome to the first pillar of a design principle on process mining which is never ever filter Data before loading it",
+    "cross_ref_episode": 259
+  },
+  {
+    "day": 176,
+    "date_label": "June 25",
+    "quote": "Else it is absolutely normal here in.",
+    "episode": 229,
+    "episode_title": "strawberry price",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "strawberry price",
+    "mood": "passionate",
+    "context": "Thi discusses: How much would you pay for a strawberry and would that price change if you were to give it to someone else it is abso",
+    "cross_ref_episode": 161
+  },
+  {
+    "day": 177,
+    "date_label": "June 26",
+    "quote": "Nothing as you might have guessed I am.",
+    "episode": 176,
+    "episode_title": "Process Health",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Health",
+    "mood": "practical",
+    "context": "Thi discusses: Health is not everything but without Health everything is nothing as you might have guessed I am amazed by and that's",
+    "cross_ref_episode": 205
+  },
+  {
+    "day": 178,
+    "date_label": "June 27",
+    "quote": "To life the universe and everything.",
+    "episode": 135,
+    "episode_title": "41 Birthday",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "41 Birthday",
+    "mood": "philosophical",
+    "context": "Thi discusses: Today I turned 40 for the second time or in other words one year from the answer to life the universe and everything",
+    "cross_ref_episode": 217
+  },
+  {
+    "day": 179,
+    "date_label": "June 28",
+    "quote": "Despite all my efforts of finding the.",
+    "episode": 63,
+    "episode_title": "Nike Beatles Elsa",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Nike Beatles Elsa",
+    "mood": "inspiring",
+    "context": "Thi discusses: Want to be successful remember these three images Nike The Beatles Frozen despite all my efforts of finding the secre",
+    "cross_ref_episode": 61
+  },
+  {
+    "day": 180,
+    "date_label": "June 29",
+    "quote": "Chord into my hand and start doing the.",
+    "episode": 29,
+    "episode_title": "Learning by doing",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Learning by doing",
+    "mood": "passionate",
+    "context": "Thi discusses: It's time for some deeper look into the statement learning by doing is always a great way to achieve mastery open hea",
+    "cross_ref_episode": 194
+  },
+  {
+    "day": 181,
+    "date_label": "June 30",
+    "quote": "You know which place has the worst water slides? Starbucks coffee.",
+    "episode": 156,
+    "episode_title": "Starbucks And Waterslides",
+    "hashtag": "#service",
+    "category": "Business & Strategy",
+    "theme": "Unexpected Analogies",
+    "mood": "playful",
+    "context": "Thi uses an absurd comparison to make a point about mismatched expectations",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 182,
+    "date_label": "July 1",
+    "quote": "One question before the extra situation.",
+    "episode": 343,
+    "episode_title": "winning or losing team",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "winning or losing",
+    "mood": "inspiring",
+    "context": "Thi discusses: Another red pill blue pill situation do you prefer losing with a good feeling or winning with a bad feeling quite ear",
+    "cross_ref_episode": 20
+  },
+  {
+    "day": 183,
+    "date_label": "July 2",
+    "quote": "Opposite I teach basic tennis it is the.",
+    "episode": 328,
+    "episode_title": "basic stuff",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Court Wisdom",
+    "mood": "inspiring",
+    "context": "Thi discusses: Because you teach basic stuff doesn't make you basic quite the opposite I teach basic tennis it is the hardest thing",
+    "cross_ref_episode": 291
+  },
+  {
+    "day": 184,
+    "date_label": "July 3",
+    "quote": "I just recently did a podcast and was.",
+    "episode": 117,
+    "episode_title": "It From Hell",
+    "hashtag": "#technology",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "It From Hell",
+    "mood": "philosophical",
+    "context": "Thi discusses: The best learning experiences are often based on the worst ones I just recently did a podcast and was asked about the",
+    "cross_ref_episode": 175
+  },
+  {
+    "day": 185,
+    "date_label": "July 4",
+    "quote": "Very much what's going on my previous AI.",
+    "episode": 294,
+    "episode_title": "confused AI",
+    "hashtag": "#ai",
+    "category": "Technology & AI",
+    "theme": "confused AI",
+    "mood": "passionate",
+    "context": "Thi discusses: I am so confused baffled beyond belief obviously I am not but then again yes very much what's going on my previous AI",
+    "cross_ref_episode": 158
+  },
+  {
+    "day": 186,
+    "date_label": "July 5",
+    "quote": "Wine I actually wanted to talk about the.",
+    "episode": 345,
+    "episode_title": "red wine or white wine",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "red wine or",
+    "mood": "reflective",
+    "context": "Thi discusses: Not red pill blue pill but red wine or white wine I actually wanted to talk about the difference between a Boolean an",
+    "cross_ref_episode": 31
+  },
+  {
+    "day": 187,
+    "date_label": "July 6",
+    "quote": "The most important parts of life how can.",
+    "episode": 315,
+    "episode_title": "non stop nerdism",
+    "hashtag": "#humor",
+    "category": "Career & Personal Growth",
+    "theme": "non stop nerdism",
+    "mood": "philosophical",
+    "context": "Thi discusses: Discussion about courage, Star Trek, Star Wars",
+    "cross_ref_episode": 208
+  },
+  {
+    "day": 188,
+    "date_label": "July 7",
+    "quote": "Really so yes if you want me to spell it.",
+    "episode": 317,
+    "episode_title": "No talents needed",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "No talents needed",
+    "mood": "philosophical",
+    "context": "Thi discusses: And Leadership lesson all the things I will ask from you will not require any talent but many things I ask of you sho",
+    "cross_ref_episode": 262
+  },
+  {
+    "day": 189,
+    "date_label": "July 8",
+    "quote": "Two when it comes to business travel.",
+    "episode": 295,
+    "episode_title": "bad role model",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "bad role model",
+    "mood": "reflective",
+    "context": "Thi discusses: I'm a bad role model but doesn't mean you couldn't learn from me a thing or two when it comes to business travel work",
+    "cross_ref_episode": 109
+  },
+  {
+    "day": 190,
+    "date_label": "July 9",
+    "quote": "Leadership skills for now imagine this.",
+    "episode": 310,
+    "episode_title": "Leadership interruption",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Leading With Purpose",
+    "mood": "playful",
+    "context": "Thi discusses: Hey there let me hijack te's miniseries on leadership to test your own leadership skills for now imagine this there i",
+    "cross_ref_episode": 4
+  },
+  {
+    "day": 191,
+    "date_label": "July 10",
+    "quote": "Because you cannot anyhow but if you.",
+    "episode": 271,
+    "episode_title": "dont start to drink",
+    "hashtag": "#humor",
+    "category": "Food & Culture",
+    "theme": "dont start to",
+    "mood": "practical",
+    "context": "Thi discusses: Don't start drinking when you are thirsty don't update your CV when you need a job don't wait until the last day befo",
+    "cross_ref_episode": 208
+  },
+  {
+    "day": 192,
+    "date_label": "July 11",
+    "quote": "Your worst second serve you cannot risk.",
+    "episode": 219,
+    "episode_title": "2nd serve",
+    "hashtag": "#tennis",
+    "category": "Career & Personal Growth",
+    "theme": "2nd serve",
+    "mood": "playful",
+    "context": "Thi discusses: Today I lost because of my second surf it was the worst stroke of my play today in only two sentences there are three",
+    "cross_ref_episode": 152
+  },
+  {
+    "day": 193,
+    "date_label": "July 12",
+    "quote": "Everyone whether it is the fall of.",
+    "episode": 216,
+    "episode_title": "Unlucky day Tuesday 13th",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Unlucky day Tuesday",
+    "mood": "practical",
+    "context": "Thi discusses: Crazy davo maop phobia the fear of Tuesday 13th happy Tuesday everyone whether it is the fall of Constantinople some",
+    "cross_ref_episode": 30
+  },
+  {
+    "day": 194,
+    "date_label": "July 13",
+    "quote": "As you can have imagined this episode is.",
+    "episode": 156,
+    "episode_title": "Starbucks And Waterslides",
+    "hashtag": "#service",
+    "category": "Business & Strategy",
+    "theme": "Starbucks And Waterslides",
+    "mood": "practical",
+    "context": "Thi discusses: Do you know which place has the worst water slides Starbucks coffee as you can have imagined this episode is not abou",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 195,
+    "date_label": "July 14",
+    "quote": "Maybe you have heard of LED which refers.",
+    "episode": 47,
+    "episode_title": "Mouth Ears Disc",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Mouth Ears Disc",
+    "mood": "philosophical",
+    "context": "Thi discusses: Today I want to talk about the disorder which is really common and has Rich pandemic proportions already I call it Me",
+    "cross_ref_episode": 209
+  },
+  {
+    "day": 196,
+    "date_label": "July 15",
+    "quote": "Krueger you cannot join the club if you.",
+    "episode": 54,
+    "episode_title": "Dunning Kruger",
+    "hashtag": "#humor",
+    "category": "Humor & Entertainment",
+    "theme": "Dunning Kruger",
+    "mood": "passionate",
+    "context": "Thi discusses: The first rule of Danny Krueger club you do not know you are in the dining Kruger Club vice versa if you know about D",
+    "cross_ref_episode": 271
+  },
+  {
+    "day": 197,
+    "date_label": "July 16",
+    "quote": "Doesn't it and if you want to hyperscale.",
+    "episode": 46,
+    "episode_title": "NIH",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "NIH",
+    "mood": "practical",
+    "context": "Thi discusses: It's great it probably works but it wasn't my idea so therefore no go NIH syndrome which stands for not invented tear",
+    "cross_ref_episode": 87
+  },
+  {
+    "day": 198,
+    "date_label": "July 17",
+    "quote": "I think you can't always do that with.",
+    "episode": 79,
+    "episode_title": "Barry",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Barry",
+    "mood": "practical",
+    "context": "Thi discusses: I think it's it's more important than ever because uh we have this increased urgency now every month to get the um sa",
+    "cross_ref_episode": 43
+  },
+  {
+    "day": 199,
+    "date_label": "July 18",
+    "quote": "To appreciate the beauty of the city yes.",
+    "episode": 247,
+    "episode_title": "x Gero",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "x Gero",
+    "mood": "philosophical",
+    "context": "Thi discusses: Super bad timing and he said why because just this very morning I discussed with the with the other Founders that we",
+    "cross_ref_episode": 123
+  },
+  {
+    "day": 200,
+    "date_label": "July 19",
+    "quote": "Oversimplifying in some kitchens there.",
+    "episode": 103,
+    "episode_title": "Story Of My Knife",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "Story Of My",
+    "mood": "inspiring",
+    "context": "Thi discusses: And another episode about nice well it's the story of my knife oversimplifying in some kitchens there is a tendency f",
+    "cross_ref_episode": 99
+  },
+  {
+    "day": 201,
+    "date_label": "July 20",
+    "quote": "Still see the same issues organizations.",
+    "episode": 252,
+    "episode_title": "Design principles   intro",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Design principles   intro",
+    "mood": "philosophical",
+    "context": "Thi discusses: It's been over 8 years that I have implemented process Mining and since I still see the same issues organizations str",
+    "cross_ref_episode": 102
+  },
+  {
+    "day": 202,
+    "date_label": "July 21",
+    "quote": "Management we need to understand that.",
+    "episode": 72,
+    "episode_title": "Courage V2",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Courage V2",
+    "mood": "philosophical",
+    "context": "Thi discusses: Discussion about SAP, courage, confidence",
+    "cross_ref_episode": 247
+  },
+  {
+    "day": 203,
+    "date_label": "July 22",
+    "quote": "In Copenhagen Denmark so I am taking.",
+    "episode": 278,
+    "episode_title": "Food Culture Process Variant",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "Food Culture Process",
+    "mood": "inspiring",
+    "context": "Thi discusses: Welcome to the process kitchen te is getting busy for icpm the International Conference of process mining this year i",
+    "cross_ref_episode": 228
+  },
+  {
+    "day": 204,
+    "date_label": "July 23",
+    "quote": "Decision whenever I took over a team or.",
+    "episode": 308,
+    "episode_title": "decision making with me",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Decision Making",
+    "mood": "practical",
+    "context": "Thi discusses: If I wear your leader please never come to me asking for a decision whenever I took over a team or buildt a new one f",
+    "cross_ref_episode": 183
+  },
+  {
+    "day": 205,
+    "date_label": "July 24",
+    "quote": "Me it's decades ago that I have learned.",
+    "episode": 364,
+    "episode_title": "Euler Lagrange Equation",
+    "hashtag": "#philosophy",
+    "category": "Science & Physics",
+    "theme": "Lifelong Learning",
+    "mood": "passionate",
+    "context": "Thi discusses: I cannot believe it episode 364 the second last one for a while and I have never talked about the oiler Lon equation",
+    "cross_ref_episode": 34
+  },
+  {
+    "day": 206,
+    "date_label": "July 25",
+    "quote": "When I was early in my career I had a.",
+    "episode": 107,
+    "episode_title": "Origin Better Questions",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Origin Better Questions",
+    "mood": "philosophical",
+    "context": "Thi discusses: Today I want to share with you the origin story of why the next question should be the better question when I was ear",
+    "cross_ref_episode": 328
+  },
+  {
+    "day": 207,
+    "date_label": "July 26",
+    "quote": "Know one thing for certain not the first.",
+    "episode": 353,
+    "episode_title": "crowdstrike",
+    "hashtag": "#technology",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "crowdstrike",
+    "mood": "practical",
+    "context": "Thi discusses: When nobody makes a mistake or maybe a small one but still all the world goes to help at least temporarily we only kn",
+    "cross_ref_episode": 175
+  },
+  {
+    "day": 208,
+    "date_label": "July 27",
+    "quote": "Taryan you know that St George is the.",
+    "episode": 215,
+    "episode_title": "Enter the Dragon",
+    "hashtag": "#courage",
+    "category": "Career & Personal Growth",
+    "theme": "Enter the Dragon",
+    "mood": "reflective",
+    "context": "Thi discusses: Happy New Year let's enter the Year of the Dragon whether you are a Lannister or taryan you know that St George is th",
+    "cross_ref_episode": 111
+  },
+  {
+    "day": 209,
+    "date_label": "July 28",
+    "quote": "Probably won't make much sense to you it.",
+    "episode": 243,
+    "episode_title": "Pig and Corn Responsibility Competence",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Pig and Corn",
+    "mood": "inspiring",
+    "context": "Thi discusses: You can translate the sentence but it probably won't make much sense to you it means why don't pigs eat corn pigs eat",
+    "cross_ref_episode": 15
+  },
+  {
+    "day": 210,
+    "date_label": "July 29",
+    "quote": "There are many ideas and sometimes.",
+    "episode": 225,
+    "episode_title": "run out of ideas",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: Will I ever run out of things to talk about on t with tea the definite answer is no not really obviously there are da",
+    "cross_ref_episode": 145
+  },
+  {
+    "day": 211,
+    "date_label": "July 30",
+    "quote": "Take what first looks like a huge insurmountable problem, decompose it into its various constituents until it's at a scale you can solve, then reintegrate.",
+    "episode": 86,
+    "episode_title": "Loren",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Problem Decomposition",
+    "mood": "practical",
+    "context": "Thi describes the analytical approach to overwhelming challenges",
+    "cross_ref_episode": 107
+  },
+  {
+    "day": 212,
+    "date_label": "July 31",
+    "quote": "But spoiler alert this person was the.",
+    "episode": 85,
+    "episode_title": "No Talent",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "No Talent",
+    "mood": "playful",
+    "context": "Thi discusses: Like understanding an episode of tbst no Talent is required for many important things in life Talent can make some th",
+    "cross_ref_episode": 13
+  },
+  {
+    "day": 213,
+    "date_label": "August 1",
+    "quote": "Episodes well the most time the process.",
+    "episode": 166,
+    "episode_title": "Making Things Shorter",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Process Thinking",
+    "mood": "philosophical",
+    "context": "Thi discusses: Where do you take all the time to make tea with tea video episodes well the most time the process takes is making the",
+    "cross_ref_episode": 326
+  },
+  {
+    "day": 214,
+    "date_label": "August 2",
+    "quote": "If you want to drive your transformation.",
+    "episode": 6,
+    "episode_title": "Efficacy",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Driving Transformation",
+    "mood": "practical",
+    "context": "Thi discusses: Welcome to the effing words edition of t with t hey don't cancel me quite yet what I mean are words like Effectivenes",
+    "cross_ref_episode": 185
+  },
+  {
+    "day": 215,
+    "date_label": "August 3",
+    "quote": "Sake but when they go together each.",
+    "episode": 218,
+    "episode_title": "matcha made in heaven",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "matcha made in",
+    "mood": "inspiring",
+    "context": "Thi discusses: Let's talk about business Process Management and Enterprise architecture how to make great things even better I do li",
+    "cross_ref_episode": 229
+  },
+  {
+    "day": 216,
+    "date_label": "August 4",
+    "quote": "Talent can make some things easier but.",
+    "episode": 85,
+    "episode_title": "No Talent",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "No Talent",
+    "mood": "reflective",
+    "context": "Thi discusses: Like understanding an episode of tbst no Talent is required for many important things in life Talent can make some th",
+    "cross_ref_episode": 71
+  },
+  {
+    "day": 217,
+    "date_label": "August 5",
+    "quote": "Early and surprise opponent by going.",
+    "episode": 102,
+    "episode_title": "Return",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Return",
+    "mood": "philosophical",
+    "context": "Thi discusses: I like to serve yet there's a point of return",
+    "cross_ref_episode": 192
+  },
+  {
+    "day": 218,
+    "date_label": "August 6",
+    "quote": "Business let's get down to business.",
+    "episode": 8,
+    "episode_title": "Business",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Business",
+    "mood": "inspiring",
+    "context": "Thi discusses: Hello there second business business as usual mind your own business money business let's get down to business busine",
+    "cross_ref_episode": 85
+  },
+  {
+    "day": 219,
+    "date_label": "August 7",
+    "quote": "String imagine you are in the match.",
+    "episode": 306,
+    "episode_title": "broken string",
+    "hashtag": "#music",
+    "category": "Music & Piano",
+    "theme": "broken string",
+    "mood": "practical",
+    "context": "Thi discusses: This is not a picture of my tennis record with a broken string imagine you are in the match warming up getting excite",
+    "cross_ref_episode": 64
+  },
+  {
+    "day": 220,
+    "date_label": "August 8",
+    "quote": "You the marvels of AI in this new.",
+    "episode": 291,
+    "episode_title": "Steve Jobs or Wozniak",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Steve Jobs or",
+    "mood": "practical",
+    "context": "Thi discusses: This episode is dedicated to Diogo shout out to my fellow inner today I will show you the marvels of AI in this new e",
+    "cross_ref_episode": 172
+  },
+  {
+    "day": 221,
+    "date_label": "August 9",
+    "quote": "Constantinople some 820 years ago or the.",
+    "episode": 216,
+    "episode_title": "Unlucky day Tuesday 13th",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Unlucky day Tuesday",
+    "mood": "practical",
+    "context": "Thi discusses: Crazy davo maop phobia the fear of Tuesday 13th happy Tuesday everyone whether it is the fall of Constantinople some",
+    "cross_ref_episode": 51
+  },
+  {
+    "day": 222,
+    "date_label": "August 10",
+    "quote": "Either there are important Concepts.",
+    "episode": 237,
+    "episode_title": "nice guy",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "nice guy",
+    "mood": "philosophical",
+    "context": "Thi discusses: All is fair in Love and War at that ain't",
+    "cross_ref_episode": 343
+  },
+  {
+    "day": 223,
+    "date_label": "August 11",
+    "quote": "Policies and comparative advantage help.",
+    "episode": 214,
+    "episode_title": "Rising Tides",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Rising Tides",
+    "mood": "passionate",
+    "context": "Thi discusses: A rising tide lifts all boats when you hear the sentence what are you thinking about and how does it make you feel ar",
+    "cross_ref_episode": 79
+  },
+  {
+    "day": 224,
+    "date_label": "August 12",
+    "quote": "You didn't get triggered yet by last.",
+    "episode": 255,
+    "episode_title": "3rd principle",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "3rd principle",
+    "mood": "reflective",
+    "context": "Thi discusses: Hey thanks for joining the session on the third pillar of my guiding principle regarding process mining data schemas",
+    "cross_ref_episode": 217
+  },
+  {
+    "day": 225,
+    "date_label": "August 13",
+    "quote": "Around why we need to set up the right.",
+    "episode": 3,
+    "episode_title": "Moving Baselines",
+    "hashtag": "#transformation",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Moving Baselines",
+    "mood": "inspiring",
+    "context": "Thi discusses: Why do transformation activities fail so often today I want to mention one reason I've seen many times but I haven't",
+    "cross_ref_episode": 7
+  },
+  {
+    "day": 226,
+    "date_label": "August 14",
+    "quote": "Maybe not in this case if you want to be.",
+    "episode": 270,
+    "episode_title": "dont care dont mind",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "dont care dont",
+    "mood": "reflective",
+    "context": "Thi discusses: I don't care and I don't mind sometimes we say I don't care but we mean I don't mind sometimes we say I don't mind bu",
+    "cross_ref_episode": 335
+  },
+  {
+    "day": 227,
+    "date_label": "August 15",
+    "quote": "Recommendation said Sam Oldman in a.",
+    "episode": 352,
+    "episode_title": "Recommendations on a video game",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Meaningful Endings",
+    "mood": "philosophical",
+    "context": "Thi discusses: Discussion about digital transformation, storytelling, video games",
+    "cross_ref_episode": 279
+  },
+  {
+    "day": 228,
+    "date_label": "August 16",
+    "quote": "Working wearing collared shirts with.",
+    "episode": 115,
+    "episode_title": "T Shirts",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "T Shirts",
+    "mood": "reflective",
+    "context": "Thi discusses: Tea like in T-Bone iced tea teaspoon tea with tea but also t-shirts working wearing collared shirts with ties was nor",
+    "cross_ref_episode": 159
+  },
+  {
+    "day": 229,
+    "date_label": "August 17",
+    "quote": "But for this matter you cannot delegate.",
+    "episode": 151,
+    "episode_title": "I Am The Budget",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "I Am The",
+    "mood": "practical",
+    "context": "Thi discusses: There are scenarios when I don't have the budget is an unacceptable statement this small story happened probably arou",
+    "cross_ref_episode": 79
+  },
+  {
+    "day": 230,
+    "date_label": "August 18",
+    "quote": "Humbled grateful and honored to be.",
+    "episode": 282,
+    "episode_title": "Postmodernist Roy",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Postmodernist Roy",
+    "mood": "philosophical",
+    "context": "Thi discusses: I would like to introduce myself I am postmodernist Roy and I am deeply humbled grateful and honored to be featured o",
+    "cross_ref_episode": 266
+  },
+  {
+    "day": 231,
+    "date_label": "August 19",
+    "quote": "Bad imagine you going to a fast food.",
+    "episode": 334,
+    "episode_title": "Consistently bad the beers",
+    "hashtag": "#humor",
+    "category": "Food & Culture",
+    "theme": "Food For Thought",
+    "mood": "passionate",
+    "context": "Thi discusses: Do you prefer Sometimes good sometimes bad or consistently bad imagine you going to a fast food chain the food is sur",
+    "cross_ref_episode": 154
+  },
+  {
+    "day": 232,
+    "date_label": "August 20",
+    "quote": "Too I love jazz improvisation both.",
+    "episode": 325,
+    "episode_title": "Improvisation",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Improvisation",
+    "mood": "passionate",
+    "context": "Thi discusses: Discussion about jazz, improvisation, listening",
+    "cross_ref_episode": 74
+  },
+  {
+    "day": 233,
+    "date_label": "August 21",
+    "quote": "The summit might be an uncomfortable.",
+    "episode": 114,
+    "episode_title": "Love Math",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Love Math",
+    "mood": "passionate",
+    "context": "Thi discusses: I love math not since day one but ever since",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 234,
+    "date_label": "August 22",
+    "quote": "Jetzt nicht noch mal ich mache jetzt.",
+    "episode": 125,
+    "episode_title": "Nico 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Nico 1",
+    "mood": "reflective",
+    "context": "Thi discusses: Willkommen bei TFT wollte schon sagen Watson people aber es ist alles gut das Schneiden wir jetzt nicht noch mal ich",
+    "cross_ref_episode": 80
+  },
+  {
+    "day": 235,
+    "date_label": "August 23",
+    "quote": "Received sorry it took me over 40 years.",
+    "episode": 185,
+    "episode_title": "Advice",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Advice",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I will give you the best advice I have ever received sorry it took me over 40 years to create this episode but",
+    "cross_ref_episode": 291
+  },
+  {
+    "day": 236,
+    "date_label": "August 24",
+    "quote": "Canas sometimes I wonder why is it so.",
+    "episode": 250,
+    "episode_title": "Panem and Circensis",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: Episode 250 PanAm at K canas sometimes I wonder why is it so hard to watch a 2 and 1/ half hour movie but no problem",
+    "cross_ref_episode": 63
+  },
+  {
+    "day": 237,
+    "date_label": "August 25",
+    "quote": "When I say politics not so much in a.",
+    "episode": 69,
+    "episode_title": "Politics",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Politics",
+    "mood": "passionate",
+    "context": "Thi discusses: I love politics I hope you do too",
+    "cross_ref_episode": 283
+  },
+  {
+    "day": 238,
+    "date_label": "August 26",
+    "quote": "Mention the interview question what are.",
+    "episode": 75,
+    "episode_title": "Strengths And Weaknesses Part 2",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Strengths And Weaknesses",
+    "mood": "reflective",
+    "context": "Thi discusses: Mention the interview question what are your strengths and your weaknesses now that we frame the semantics and mindse",
+    "cross_ref_episode": 48
+  },
+  {
+    "day": 239,
+    "date_label": "August 27",
+    "quote": "You cannot measure you cannot improve.",
+    "episode": 318,
+    "episode_title": "Goodhart's Law",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Goodhart's Law",
+    "mood": "inspiring",
+    "context": "Thi discusses: Discussion about data, beer, humor",
+    "cross_ref_episode": 41
+  },
+  {
+    "day": 240,
+    "date_label": "August 28",
+    "quote": "Strategy and spoiler alert the way how.",
+    "episode": 62,
+    "episode_title": "Collaboration",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Strategic Thinking",
+    "mood": "playful",
+    "context": "Thi discusses: Don't worry I have not gone totally crazy yet but sorry to say collaboration is not a strategy collaboration is impor",
+    "cross_ref_episode": 291
+  },
+  {
+    "day": 241,
+    "date_label": "August 29",
+    "quote": "Good news we have perfected the three R's reduce reuse recycle bad news only on social media brand sarcasm and.",
+    "episode": 73,
+    "episode_title": "3Rs",
+    "hashtag": "#education",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Value vs Price",
+    "mood": "inspiring",
+    "context": "Thi shares wisdom from experience",
+    "cross_ref_episode": 176
+  },
+  {
+    "day": 242,
+    "date_label": "August 30",
+    "quote": "More enjoyable since I learned about new.",
+    "episode": 60,
+    "episode_title": "The Otter Side",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Lifelong Learning",
+    "mood": "reflective",
+    "context": "Thi discusses: In order to understand the difference between answers and outcomes in a simple way let's meet on the other side Yes y",
+    "cross_ref_episode": 316
+  },
+  {
+    "day": 243,
+    "date_label": "August 31",
+    "quote": "Rude I love this comment from St jobs I.",
+    "episode": 357,
+    "episode_title": "competition revisited",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "competition revisited",
+    "mood": "passionate",
+    "context": "Thi discusses: Just because we are competing with someone doesn't mean we have to be rude I love this comment from St jobs I also lo",
+    "cross_ref_episode": 87
+  },
+  {
+    "day": 244,
+    "date_label": "September 1",
+    "quote": "You know the difference between a maze and a labyrinth? A maze has many paths and dead ends. A labyrinth has only one path \u2014 you just have to trust it.",
+    "episode": 149,
+    "episode_title": "Labyrinth And Maze",
+    "hashtag": "#philosophy",
+    "category": "Technology & AI",
+    "theme": "Trust The Process",
+    "mood": "philosophical",
+    "context": "Thi uses the maze vs labyrinth distinction to talk about process intelligence",
+    "cross_ref_episode": 135
+  },
+  {
+    "day": 245,
+    "date_label": "September 2",
+    "quote": "Books about everything in a beautiful.",
+    "episode": 81,
+    "episode_title": "Library",
+    "hashtag": "#culture",
+    "category": "Education & Learning",
+    "theme": "Library",
+    "mood": "passionate",
+    "context": "Thi discusses: The recipe for Success might be found here but not success itself look at this place books about everything in a beau",
+    "cross_ref_episode": 104
+  },
+  {
+    "day": 246,
+    "date_label": "September 3",
+    "quote": "Elusive and I do think of it as an.",
+    "episode": 136,
+    "episode_title": "It's Me Not You",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "It's Me Not",
+    "mood": "practical",
+    "context": "Thi discusses: I have to confess something today it's not you it's me",
+    "cross_ref_episode": 62
+  },
+  {
+    "day": 247,
+    "date_label": "September 4",
+    "quote": "Moreover do you let the cat out of the.",
+    "episode": 335,
+    "episode_title": "do words matter",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "do words matter",
+    "mood": "reflective",
+    "context": "Thi discusses: What's the difference between a jail and a prison a Jailer and a prisoner or moreover do you let the cat out of the b",
+    "cross_ref_episode": 58
+  },
+  {
+    "day": 248,
+    "date_label": "September 5",
+    "quote": "Work and I have a particular experience.",
+    "episode": 207,
+    "episode_title": "Slot Machines",
+    "hashtag": "#gambling",
+    "category": "Technology & AI",
+    "theme": "Slot Machines",
+    "mood": "philosophical",
+    "context": "Thi discusses: Lots of fun if you're winning but mathematically the worst odds slot machines I love the way slot machines work and I",
+    "cross_ref_episode": 202
+  },
+  {
+    "day": 249,
+    "date_label": "September 6",
+    "quote": "Pandemic proportions already I call it.",
+    "episode": 47,
+    "episode_title": "Mouth Ears Disc",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Mouth Ears Disc",
+    "mood": "philosophical",
+    "context": "Thi discusses: Today I want to talk about the disorder which is really common and has Rich pandemic proportions already I call it Me",
+    "cross_ref_episode": 35
+  },
+  {
+    "day": 250,
+    "date_label": "September 7",
+    "quote": "Obvious doesn't mean I expect the.",
+    "episode": 347,
+    "episode_title": "curious but not condescending",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "curious but not",
+    "mood": "philosophical",
+    "context": "Thi discusses: I am just curious not condescending if I come across patronizing I am just sorry for asking the obvious asking the ob",
+    "cross_ref_episode": 325
+  },
+  {
+    "day": 251,
+    "date_label": "September 8",
+    "quote": "True imagine you go to a doctor and.",
+    "episode": 213,
+    "episode_title": "Customer is always right",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Customer is always",
+    "mood": "inspiring",
+    "context": "Thi discusses: Customer is always right sounds great but it is not true imagine you go to a doctor and after the checkup the doctor",
+    "cross_ref_episode": 310
+  },
+  {
+    "day": 252,
+    "date_label": "September 9",
+    "quote": "It comes to a short story many in the.",
+    "episode": 113,
+    "episode_title": "Vesak",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Vesak",
+    "mood": "inspiring",
+    "context": "Thi discusses: How long does it take to get enlightened it's not my style to just post some inspiration quotes on LinkedIn but when",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 253,
+    "date_label": "September 10",
+    "quote": "You can imagine the spectrum of answers.",
+    "episode": 35,
+    "episode_title": "Go to question",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Go to question",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I want to share with you the most valuable question when trying to learn more about the person whether it's an",
+    "cross_ref_episode": 247
+  },
+  {
+    "day": 254,
+    "date_label": "September 11",
+    "quote": "Yellow today I have a shocking topic for.",
+    "episode": 211,
+    "episode_title": "Culture Shock",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Culture Shock",
+    "mood": "practical",
+    "context": "Thi discusses: My hair is black my blood is red my skin is yellow today I have a shocking topic for you it's culture shock some of y",
+    "cross_ref_episode": 186
+  },
+  {
+    "day": 255,
+    "date_label": "September 12",
+    "quote": "Agentic agentic is just the adjective of.",
+    "episode": 320,
+    "episode_title": "Agentic",
+    "hashtag": "#philosophy",
+    "category": "Technology & AI",
+    "theme": "Agentic",
+    "mood": "reflective",
+    "context": "Thi discusses: The world has been around and now gets another Renaissance agentic agentic is just the adjective of agent which comes",
+    "cross_ref_episode": 157
+  },
+  {
+    "day": 256,
+    "date_label": "September 13",
+    "quote": "Already they are not staged today we.",
+    "episode": 37,
+    "episode_title": "Absolute",
+    "hashtag": "#philosophy",
+    "category": "Science & Physics",
+    "theme": "Absolute",
+    "mood": "philosophical",
+    "context": "Thi discusses: Hi there I just wanted to make sure everyone knows that I do have legs already they are not staged today we talk abou",
+    "cross_ref_episode": 298
+  },
+  {
+    "day": 257,
+    "date_label": "September 14",
+    "quote": "Today I guess in order to get a relevant.",
+    "episode": 188,
+    "episode_title": "Kakistocracy",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Kakistocracy",
+    "mood": "inspiring",
+    "context": "Thi discusses: Do you believe that we have kakistocracy in places today I guess in order to get a relevant answer one should know wh",
+    "cross_ref_episode": 86
+  },
+  {
+    "day": 258,
+    "date_label": "September 15",
+    "quote": "Certain mindset I think we need to.",
+    "episode": 277,
+    "episode_title": "Dreams are reality",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Dreams are reality",
+    "mood": "philosophical",
+    "context": "Thi discusses: When I hear a dream becomes reality it has a nice ring to it yet reveals a certain mindset I think we need to revisit",
+    "cross_ref_episode": 157
+  },
+  {
+    "day": 259,
+    "date_label": "September 16",
+    "quote": "Little bots so you know the funny thing.",
+    "episode": 121,
+    "episode_title": "Liher",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Liher",
+    "mood": "playful",
+    "context": "Thi discusses: I would say signal is nothing but a an amazing tool that can really help customers accelerate the value Journey welco",
+    "cross_ref_episode": 247
+  },
+  {
+    "day": 260,
+    "date_label": "September 17",
+    "quote": "Slides neither have much power nor are.",
+    "episode": 241,
+    "episode_title": "Powerpoint Less",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Powerpoint Less",
+    "mood": "practical",
+    "context": "Thi discusses: Let's talk about one of the most important skills of many careers PowerPoint despite its name PowerPoint slides neith",
+    "cross_ref_episode": 232
+  },
+  {
+    "day": 261,
+    "date_label": "September 18",
+    "quote": "You guessed it right amateur has a.",
+    "episode": 23,
+    "episode_title": "Amateur APE",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Amateur APE",
+    "mood": "inspiring",
+    "context": "Thi discusses: Another Trilogy the ape the ape Saga first episode a for amateur you guessed it right amateur has a totally different",
+    "cross_ref_episode": 29
+  },
+  {
+    "day": 262,
+    "date_label": "September 19",
+    "quote": "Data if you have 10 different SAP RP.",
+    "episode": 254,
+    "episode_title": "2nd principle",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Data-Driven Insight",
+    "mood": "passionate",
+    "context": "Thi discusses: This is a second pillar of a design principle for process mining data schemas and this one gets many people triggered",
+    "cross_ref_episode": 37
+  },
+  {
+    "day": 263,
+    "date_label": "September 20",
+    "quote": "Really add up if you cannot fathom it in.",
+    "episode": 200,
+    "episode_title": "Convergence",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Convergence",
+    "mood": "reflective",
+    "context": "Thi discusses: D episode 200 today's topic of complexity and simplicity converged season 1 of T witht started with the episode compl",
+    "cross_ref_episode": 254
+  },
+  {
+    "day": 264,
+    "date_label": "September 21",
+    "quote": "Meant to be answered by you try to have.",
+    "episode": 290,
+    "episode_title": "Questions you should not be answering",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Questions you should",
+    "mood": "reflective",
+    "context": "Thi discusses: In life there are a lot of questions put towards you but some of them are not meant to be answered by you try to have",
+    "cross_ref_episode": 283
+  },
+  {
+    "day": 265,
+    "date_label": "September 22",
+    "quote": "Tell you is that asking what is a good.",
+    "episode": 52,
+    "episode_title": "Good Process",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Good Process",
+    "mood": "philosophical",
+    "context": "Thi discusses: I don't know why a cookie is called the cookie and not the baking but what I can tell you is that asking what is a go",
+    "cross_ref_episode": 83
+  },
+  {
+    "day": 266,
+    "date_label": "September 23",
+    "quote": "Often enough but even more important.",
+    "episode": 4,
+    "episode_title": "Celebration",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Celebration",
+    "mood": "passionate",
+    "context": "Thi discusses: Celebration of success is often ignored generally I think we don't celebrate often enough but even more important tha",
+    "cross_ref_episode": 147
+  },
+  {
+    "day": 267,
+    "date_label": "September 24",
+    "quote": "Business is not about negotiating but.",
+    "episode": 302,
+    "episode_title": "Negotiation 1",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Negotiation 1",
+    "mood": "philosophical",
+    "context": "Thi discusses: Discussion about success, negotiation",
+    "cross_ref_episode": 35
+  },
+  {
+    "day": 268,
+    "date_label": "September 25",
+    "quote": "Transparency maybe we need to learn more.",
+    "episode": 202,
+    "episode_title": "Baccarat",
+    "hashtag": "#gambling",
+    "category": "Business & Strategy",
+    "theme": "Lifelong Learning",
+    "mood": "philosophical",
+    "context": "Thi discusses: Welcome to the world of tea with te goost gambling you got no skills and experiences in gambling try bakar in this li",
+    "cross_ref_episode": 206
+  },
+  {
+    "day": 269,
+    "date_label": "September 26",
+    "quote": "Disclaimer it is not the most important.",
+    "episode": 232,
+    "episode_title": "goldfish attention",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "goldfish attention",
+    "mood": "philosophical",
+    "context": "Thi discusses: Welcome to the age of the Goldfish attention span they say 2 seconds over just keep swimming after a day you probably",
+    "cross_ref_episode": 17
+  },
+  {
+    "day": 270,
+    "date_label": "September 27",
+    "quote": "Imagine if my AI generated friends.",
+    "episode": 286,
+    "episode_title": "not medical advice AI Doctor",
+    "hashtag": "#ai",
+    "category": "Technology & AI",
+    "theme": "Meaningful Endings",
+    "mood": "practical",
+    "context": "Thi discusses: I am not a doctor but I will give you some advice nonetheless AI approved the saying prevention is better than cure e",
+    "cross_ref_episode": 110
+  },
+  {
+    "day": 271,
+    "date_label": "September 28",
+    "quote": "Sorry, but not sorry \u2014 is it really my fault that I get smarter every day?",
+    "episode": 70,
+    "episode_title": "Better Every Day",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Unapologetic Growth",
+    "mood": "provocative",
+    "context": "Thi defends changing your mind as a sign of growth, not weakness",
+    "cross_ref_episode": 37
+  },
+  {
+    "day": 272,
+    "date_label": "September 29",
+    "quote": "Circus you probably have heard the same.",
+    "episode": 362,
+    "episode_title": "the clown",
+    "hashtag": "#philosophy",
+    "category": "Humor & Entertainment",
+    "theme": "the clown",
+    "mood": "philosophical",
+    "context": "Thi discusses: When a clown moves into a palace he doesn't become a king the kingdom becomes a circus you probably have heard the sa",
+    "cross_ref_episode": 114
+  },
+  {
+    "day": 273,
+    "date_label": "September 30",
+    "quote": "Anything at all of Interest around an.",
+    "episode": 97,
+    "episode_title": "Andrea",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Andrea",
+    "mood": "philosophical",
+    "context": "Thi discusses: Which I dedicated to my wife and was called The Compassion so yeah she was also featured in the video for a brief mom",
+    "cross_ref_episode": 69
+  },
+  {
+    "day": 274,
+    "date_label": "October 1",
+    "quote": "Myself further but I have not been.",
+    "episode": 276,
+    "episode_title": "Someone else will take care of it",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Someone else will",
+    "mood": "practical",
+    "context": "Thi discusses: Hi there I am a digital minion and created via AI I would love to introduce myself further but I have not been traine",
+    "cross_ref_episode": 325
+  },
+  {
+    "day": 275,
+    "date_label": "October 2",
+    "quote": "Dreams too just imagine how they looked.",
+    "episode": 313,
+    "episode_title": "blue pill red pill",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Dream Big",
+    "mood": "passionate",
+    "context": "Thi discusses: One day I will ask you for blue pill or red pill but please don't R re choice of red pill I like puppies and ice crea",
+    "cross_ref_episode": 237
+  },
+  {
+    "day": 276,
+    "date_label": "October 3",
+    "quote": "Think we need to be aware at all times.",
+    "episode": 358,
+    "episode_title": "aware to follow or not",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: What's better or less bad you being the only one in the orchestra playing it right or you having to follow the wrong",
+    "cross_ref_episode": 68
+  },
+  {
+    "day": 277,
+    "date_label": "October 4",
+    "quote": "Balance but in flow and if you don't let.",
+    "episode": 295,
+    "episode_title": "bad role model",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "bad role model",
+    "mood": "provocative",
+    "context": "Thi discusses: I'm a bad role model but doesn't mean you couldn't learn from me a thing or two when it comes to business travel work",
+    "cross_ref_episode": 69
+  },
+  {
+    "day": 278,
+    "date_label": "October 5",
+    "quote": "Well I understand that cleaning up the.",
+    "episode": 56,
+    "episode_title": "Basement Vs Rooftops Pt2",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Basement Vs Rooftops",
+    "mood": "practical",
+    "context": "Thi discusses: Discussion about ERP, SAP, sustainability",
+    "cross_ref_episode": 262
+  },
+  {
+    "day": 279,
+    "date_label": "October 6",
+    "quote": "Need a job don't wait until the last day.",
+    "episode": 271,
+    "episode_title": "dont start to drink",
+    "hashtag": "#humor",
+    "category": "Food & Culture",
+    "theme": "dont start to",
+    "mood": "provocative",
+    "context": "Thi discusses: Don't start drinking when you are thirsty don't update your CV when you need a job don't wait until the last day befo",
+    "cross_ref_episode": 208
+  },
+  {
+    "day": 280,
+    "date_label": "October 7",
+    "quote": "Set the top down context but focus on.",
+    "episode": 2,
+    "episode_title": "Middle Ground",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Middle Ground",
+    "mood": "philosophical",
+    "context": "Thi discusses: For a successful transformation this approach has always worked out for me set the top down context but focus on the",
+    "cross_ref_episode": 85
+  },
+  {
+    "day": 281,
+    "date_label": "October 8",
+    "quote": "Week I was listening to backtack.",
+    "episode": 262,
+    "episode_title": "why of why",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Deep Listening",
+    "mood": "philosophical",
+    "context": "Thi discusses: Mal information misinformation and disinformation great topics for any day of the week I was listening to backtack ep",
+    "cross_ref_episode": 313
+  },
+  {
+    "day": 282,
+    "date_label": "October 9",
+    "quote": "Me imagine you're going into the kitchen.",
+    "episode": 259,
+    "episode_title": "illogical plastic fishing",
+    "hashtag": "#philosophy",
+    "category": "Humor & Entertainment",
+    "theme": "illogical plastic fishing",
+    "mood": "passionate",
+    "context": "Thi discusses: Greetings from Bali as I wind down my last days of this prime number eight I would like to pitch another illogical si",
+    "cross_ref_episode": 57
+  },
+  {
+    "day": 283,
+    "date_label": "October 10",
+    "quote": "Dragon whether you are a Lannister or.",
+    "episode": 215,
+    "episode_title": "Enter the Dragon",
+    "hashtag": "#courage",
+    "category": "Career & Personal Growth",
+    "theme": "Enter the Dragon",
+    "mood": "reflective",
+    "context": "Thi discusses: Happy New Year let's enter the Year of the Dragon whether you are a Lannister or taryan you know that St George is th",
+    "cross_ref_episode": 111
+  },
+  {
+    "day": 284,
+    "date_label": "October 11",
+    "quote": "Many moons ago I learned that between an.",
+    "episode": 133,
+    "episode_title": "Input Process Output",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Lifelong Learning",
+    "mood": "philosophical",
+    "context": "Thi discusses: Many moons ago I learned that between an input and an output laser process and I learned that with different inputs b",
+    "cross_ref_episode": 27
+  },
+  {
+    "day": 285,
+    "date_label": "October 12",
+    "quote": "Almost roulette is super simple whatever.",
+    "episode": 203,
+    "episode_title": "Roulette",
+    "hashtag": "#gambling",
+    "category": "Business & Strategy",
+    "theme": "Beautiful Simplicity",
+    "mood": "inspiring",
+    "context": "Thi discusses: Bo I personally do not like roulette I think it is a very fair game almost roulette is super simple whatever the odds",
+    "cross_ref_episode": 207
+  },
+  {
+    "day": 286,
+    "date_label": "October 13",
+    "quote": "Today's episode is not about cartoon.",
+    "episode": 226,
+    "episode_title": "frame of reference",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "frame of reference",
+    "mood": "practical",
+    "context": "Thi discusses: Who said I'm not bad I'm just drawn that way it's Roger Rabbit's wife Jessica Rabbit from Who Framed Roger Rabbit she",
+    "cross_ref_episode": 273
+  },
+  {
+    "day": 287,
+    "date_label": "October 14",
+    "quote": "Religion in the political Center of.",
+    "episode": 190,
+    "episode_title": "Politics And Religion",
+    "hashtag": "#culture",
+    "category": "Communication & Storytelling",
+    "theme": "Politics And Religion",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I will break a taboo and talk about politics and religion in the political Center of Germany Berlin most govern",
+    "cross_ref_episode": 159
+  },
+  {
+    "day": 288,
+    "date_label": "October 15",
+    "quote": "Would say but you know what you can't.",
+    "episode": 356,
+    "episode_title": "a good past",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "a good past",
+    "mood": "practical",
+    "context": "Thi discusses: You can't run from your past so have a good past whether you believe in Quantum time relational time or the error of",
+    "cross_ref_episode": 253
+  },
+  {
+    "day": 289,
+    "date_label": "October 16",
+    "quote": "End I am about to embark on my very.",
+    "episode": 227,
+    "episode_title": "vacation with no laptop",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Meaningful Endings",
+    "mood": "philosophical",
+    "context": "Thi discusses: Hi there today I will present some stor material in case you do not listen carefully or to the end I am about to emba",
+    "cross_ref_episode": 151
+  },
+  {
+    "day": 290,
+    "date_label": "October 17",
+    "quote": "Germany Berlin most government buildings.",
+    "episode": 190,
+    "episode_title": "Politics And Religion",
+    "hashtag": "#culture",
+    "category": "Communication & Storytelling",
+    "theme": "Politics And Religion",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I will break a taboo and talk about politics and religion in the political Center of Germany Berlin most govern",
+    "cross_ref_episode": 250
+  },
+  {
+    "day": 291,
+    "date_label": "October 18",
+    "quote": "Process is the first step on your.",
+    "episode": 52,
+    "episode_title": "Good Process",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process Thinking",
+    "mood": "practical",
+    "context": "Thi discusses: I don't know why a cookie is called the cookie and not the baking but what I can tell you is that asking what is a go",
+    "cross_ref_episode": 32
+  },
+  {
+    "day": 292,
+    "date_label": "October 19",
+    "quote": "Vegetables if you want to do a katou but.",
+    "episode": 181,
+    "episode_title": "Mise En Place",
+    "hashtag": "#leadership",
+    "category": "Food & Culture",
+    "theme": "Mise En Place",
+    "mood": "practical",
+    "context": "Thi discusses: Mis and plus or the way how to do a better ESO implementation with SCP",
+    "cross_ref_episode": 8
+  },
+  {
+    "day": 293,
+    "date_label": "October 20",
+    "quote": "Way you cannot really Rush the gestation.",
+    "episode": 32,
+    "episode_title": "Better Run",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Better Run",
+    "mood": "philosophical",
+    "context": "Thi discusses: Eight Mile algorithm LinkedIn this is the Friday fun episode of tea with tea",
+    "cross_ref_episode": 205
+  },
+  {
+    "day": 294,
+    "date_label": "October 21",
+    "quote": "First place it's like this if you cannot.",
+    "episode": 200,
+    "episode_title": "Convergence",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Convergence",
+    "mood": "practical",
+    "context": "Thi discusses: D episode 200 today's topic of complexity and simplicity converged season 1 of T witht started with the episode compl",
+    "cross_ref_episode": 277
+  },
+  {
+    "day": 295,
+    "date_label": "October 22",
+    "quote": "You why because I want to talk to all my.",
+    "episode": 311,
+    "episode_title": "1 on 1 meetings",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "1 on 1",
+    "mood": "practical",
+    "context": "Thi discusses: I don't do regular meetings scheduled in the calendar with you why because I want to talk to all my direct reports so",
+    "cross_ref_episode": 56
+  },
+  {
+    "day": 296,
+    "date_label": "October 23",
+    "quote": "Course I like with things like there's.",
+    "episode": 305,
+    "episode_title": "Unique Failure",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Unique Failure",
+    "mood": "reflective",
+    "context": "Thi discusses: Let's revisit the topic of failures for success of course I like with things like there's only falling not failing or",
+    "cross_ref_episode": 70
+  },
+  {
+    "day": 297,
+    "date_label": "October 24",
+    "quote": "Mentioned so just like Goodwill.",
+    "episode": 148,
+    "episode_title": "Goodwill",
+    "hashtag": "#philosophy",
+    "category": "Leadership & Management",
+    "theme": "Goodwill",
+    "mood": "inspiring",
+    "context": "Thi discusses: Today I want to talk about something which is complex to understand so I combine it with yet another complex topic fr",
+    "cross_ref_episode": 120
+  },
+  {
+    "day": 298,
+    "date_label": "October 25",
+    "quote": "Have been spamed for nearly 2 years of.",
+    "episode": 209,
+    "episode_title": "Consistency and continuity",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Consistency and continuity",
+    "mood": "passionate",
+    "context": "Thi discusses: The Bliss of consistency and continuity friends and POS of t with te have been spamed for nearly 2 years of me talkin",
+    "cross_ref_episode": 347
+  },
+  {
+    "day": 299,
+    "date_label": "October 26",
+    "quote": "The expert said I believe that jobs in.",
+    "episode": 110,
+    "episode_title": "Ai Interview",
+    "hashtag": "#ai",
+    "category": "Technology & AI",
+    "theme": "Ai Interview",
+    "mood": "passionate",
+    "context": "Thi discusses: One of the best AI interviews I can remember goes as following on a business trip some years ago should be around 201",
+    "cross_ref_episode": 286
+  },
+  {
+    "day": 300,
+    "date_label": "October 27",
+    "quote": "Think all colors of a rainbow don't let.",
+    "episode": 89,
+    "episode_title": "Pm Part 2 Wardrobe",
+    "hashtag": "#process",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Pm Part 2",
+    "mood": "provocative",
+    "context": "Thi discusses: Want to understand complexity of your processes let's go into your closet I want to address one topic that can be don",
+    "cross_ref_episode": 133
+  },
+  {
+    "day": 301,
+    "date_label": "October 28",
+    "quote": "Understanding your customer is not about surveys. It's about walking in their shoes.",
+    "episode": 128,
+    "episode_title": "A And The Customer",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Know Your Customer",
+    "mood": "inspiring",
+    "context": "Thi challenges the assumption that everyone knows who their customer really is",
+    "cross_ref_episode": 166
+  },
+  {
+    "day": 302,
+    "date_label": "October 29",
+    "quote": "Too the longest anticipation for a meal.",
+    "episode": 228,
+    "episode_title": "food queue",
+    "hashtag": "#food",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "food queue",
+    "mood": "inspiring",
+    "context": "Thi discusses: How long would you queue for really good food while a ton of other good options are around you too the longest antici",
+    "cross_ref_episode": 99
+  },
+  {
+    "day": 303,
+    "date_label": "October 30",
+    "quote": "Day today I need to talk about another.",
+    "episode": 337,
+    "episode_title": "graphene",
+    "hashtag": "#science",
+    "category": "Technology & AI",
+    "theme": "graphene",
+    "mood": "philosophical",
+    "context": "Thi discusses: I guess since I've kicked the Buckminster full theine ball the other day today I need to talk about another really co",
+    "cross_ref_episode": 44
+  },
+  {
+    "day": 304,
+    "date_label": "October 31",
+    "quote": "When a clown moves into a palace, he doesn't become a king. The kingdom becomes a circus.",
+    "episode": 362,
+    "episode_title": "the clown",
+    "hashtag": "#philosophy",
+    "category": "Humor & Entertainment",
+    "theme": "The Circus King",
+    "mood": "provocative",
+    "context": "Thi on how the wrong person in a leadership position corrupts the entire organization",
+    "cross_ref_episode": 275
+  },
+  {
+    "day": 305,
+    "date_label": "November 1",
+    "quote": "Talk about a seven kind spotlights.",
+    "episode": 99,
+    "episode_title": "Knives And Men",
+    "hashtag": "#food",
+    "category": "Food & Culture",
+    "theme": "Knives And Men",
+    "mood": "passionate",
+    "context": "Thi discusses: Discussion about trust",
+    "cross_ref_episode": 229
+  },
+  {
+    "day": 306,
+    "date_label": "November 2",
+    "quote": "Might be surprised how close they are.",
+    "episode": 35,
+    "episode_title": "Go to question",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Go to question",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I want to share with you the most valuable question when trying to learn more about the person whether it's an",
+    "cross_ref_episode": 174
+  },
+  {
+    "day": 307,
+    "date_label": "November 3",
+    "quote": "Always choose a coin imagine this.",
+    "episode": 163,
+    "episode_title": "Verschlimmbessern Part 2",
+    "hashtag": "#change",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Verschlimmbessern Part 2",
+    "mood": "playful",
+    "context": "Thi discusses: Most of us judge ourselves by our intentions not actions all this episode is an interesting one teleology or deontolo",
+    "cross_ref_episode": 112
+  },
+  {
+    "day": 308,
+    "date_label": "November 4",
+    "quote": "Become a professional writer and be very.",
+    "episode": 24,
+    "episode_title": "Professional APE 2",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Professional APE 2",
+    "mood": "passionate",
+    "context": "Thi discusses: Episode 2 of the ape Trilogy we covered the ape amateur today we talk about the second letter P professional I could",
+    "cross_ref_episode": 25
+  },
+  {
+    "day": 309,
+    "date_label": "November 5",
+    "quote": "Willkommen zu einer spezialfolge von.",
+    "episode": 118,
+    "episode_title": "Moritz",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Moritz",
+    "mood": "inspiring",
+    "context": "Thi discusses: Und was ich spannend finde obwohl es heute schon diese digitalen M\u00f6glichkeiten gibt gibt es auch noch genug Leute in",
+    "cross_ref_episode": 296
+  },
+  {
+    "day": 310,
+    "date_label": "November 6",
+    "quote": "Only falling not failing or how you can.",
+    "episode": 305,
+    "episode_title": "Unique Failure",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Unique Failure",
+    "mood": "provocative",
+    "context": "Thi discusses: Let's revisit the topic of failures for success of course I like with things like there's only falling not failing or",
+    "cross_ref_episode": 31
+  },
+  {
+    "day": 311,
+    "date_label": "November 7",
+    "quote": "Platform all day right Watch How I bring.",
+    "episode": 336,
+    "episode_title": "tracklib samples",
+    "hashtag": "#music",
+    "category": "Food & Culture",
+    "theme": "tracklib samples",
+    "mood": "practical",
+    "context": "Thi discusses: Discussion about data, social media, sustainability",
+    "cross_ref_episode": 64
+  },
+  {
+    "day": 312,
+    "date_label": "November 8",
+    "quote": "Spoiler alert he is one of my best.",
+    "episode": 275,
+    "episode_title": "Invictus 2",
+    "hashtag": "#philosophy",
+    "category": "Career & Personal Growth",
+    "theme": "Invictus 2",
+    "mood": "playful",
+    "context": "Thi discusses: As promised here's a follow up on my indictus episode it's probably too long but I am taking that road today I want t",
+    "cross_ref_episode": 9
+  },
+  {
+    "day": 313,
+    "date_label": "November 9",
+    "quote": "If you talk about bringing I.T and.",
+    "episode": 7,
+    "episode_title": "IT and business",
+    "hashtag": "#transformation",
+    "category": "Communication & Storytelling",
+    "theme": "IT and business",
+    "mood": "philosophical",
+    "context": "Thi discusses: Bad Business advice bring I.",
+    "cross_ref_episode": 3
+  },
+  {
+    "day": 314,
+    "date_label": "November 10",
+    "quote": "Expert as long as I believe in myself.",
+    "episode": 283,
+    "episode_title": "10 vs 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "10 vs 1",
+    "mood": "passionate",
+    "context": "Thi discusses: Who is Right 10 people telling a lie or one person telling the truth you got it some might have said the one person t",
+    "cross_ref_episode": 15
+  },
+  {
+    "day": 315,
+    "date_label": "November 11",
+    "quote": "So often the big day is known ahead go.",
+    "episode": 322,
+    "episode_title": "Preparing for competition",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Preparing for competition",
+    "mood": "philosophical",
+    "context": "Thi discusses: Hardest part of the competition preparing for it and keeping motivated doing so often the big day is known ahead go l",
+    "cross_ref_episode": 65
+  },
+  {
+    "day": 316,
+    "date_label": "November 12",
+    "quote": "So today Dee asked me to ask him.",
+    "episode": 97,
+    "episode_title": "Andrea",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Andrea",
+    "mood": "philosophical",
+    "context": "Thi discusses: Which I dedicated to my wife and was called The Compassion so yeah she was also featured in the video for a brief mom",
+    "cross_ref_episode": 181
+  },
+  {
+    "day": 317,
+    "date_label": "November 13",
+    "quote": "Just a year it's like making New Year's.",
+    "episode": 57,
+    "episode_title": "Wrong But Right Pt1",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Wrong But Right",
+    "mood": "philosophical",
+    "context": "Thi discusses: Welcome to a Mad Hatter's Tea Party episode yes it is wrong but it supports the right thing I must admit it often doe",
+    "cross_ref_episode": 275
+  },
+  {
+    "day": 318,
+    "date_label": "November 14",
+    "quote": "Chapel but I would like to be the.",
+    "episode": 239,
+    "episode_title": "Legacy and leaving behind",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Legacy and leaving",
+    "mood": "passionate",
+    "context": "Thi discusses: I do not want or need to be Michelangelo who painted the 16 Chapel but I would like to be the architect who helped bu",
+    "cross_ref_episode": 295
+  },
+  {
+    "day": 319,
+    "date_label": "November 15",
+    "quote": "But sometimes you lose control over.",
+    "episode": 13,
+    "episode_title": "Control and Confidence",
+    "hashtag": "#leadership",
+    "category": "Career & Personal Growth",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: I love to be in control like shooting my own videos but sometimes you lose control over something you never even had",
+    "cross_ref_episode": 191
+  },
+  {
+    "day": 320,
+    "date_label": "November 16",
+    "quote": "You one of the most wannabe cunning.",
+    "episode": 326,
+    "episode_title": "weaponization of words",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "weaponization of words",
+    "mood": "practical",
+    "context": "Thi discusses: The weaponization of words the irony is on you one of the most wannabe cunning techniques in corporate life is probab",
+    "cross_ref_episode": 39
+  },
+  {
+    "day": 321,
+    "date_label": "November 17",
+    "quote": "As the yearly Financial Planning number.",
+    "episode": 172,
+    "episode_title": "Budget",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Budget",
+    "mood": "philosophical",
+    "context": "Thi discusses: Don't fud it what the budget most people know the word budget as the yearly Financial Planning number but budget has",
+    "cross_ref_episode": 151
+  },
+  {
+    "day": 322,
+    "date_label": "November 18",
+    "quote": "Imagine you are the assistant coach of.",
+    "episode": 123,
+    "episode_title": "Reconfirm",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Reconfirm",
+    "mood": "inspiring",
+    "context": "Thi discusses: Reconfirm the what even it has not changed the why might have changed imagine you are the assistant coach of the foot",
+    "cross_ref_episode": 222
+  },
+  {
+    "day": 323,
+    "date_label": "November 19",
+    "quote": "In life you cannot even adjust your.",
+    "episode": 206,
+    "episode_title": "Keno",
+    "hashtag": "#gambling",
+    "category": "Business & Strategy",
+    "theme": "Keno",
+    "mood": "philosophical",
+    "context": "Thi discusses: Do you like lotteries but in the casino play Kino Kino might have French and Latin roots but it orginated from China",
+    "cross_ref_episode": 207
+  },
+  {
+    "day": 324,
+    "date_label": "November 20",
+    "quote": "And when you hear the line we all live.",
+    "episode": 64,
+    "episode_title": "Yellow Submarine",
+    "hashtag": "#music",
+    "category": "Food & Culture",
+    "theme": "Yellow Submarine",
+    "mood": "passionate",
+    "context": "Thi discusses: Whether you love or hate the song Yellow Submarine is one of the best songs that Ringo sang and when you hear the lin",
+    "cross_ref_episode": 284
+  },
+  {
+    "day": 325,
+    "date_label": "November 21",
+    "quote": "One you might have guessed it already it.",
+    "episode": 222,
+    "episode_title": "How",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "How",
+    "mood": "philosophical",
+    "context": "Thi discusses: Where what why who who's whom when which are all interrogative words with w my favorite one is a different one you mi",
+    "cross_ref_episode": 79
+  },
+  {
+    "day": 326,
+    "date_label": "November 22",
+    "quote": "Life you cannot go back in time and.",
+    "episode": 206,
+    "episode_title": "Keno",
+    "hashtag": "#gambling",
+    "category": "Business & Strategy",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: Do you like lotteries but in the casino play Kino Kino might have French and Latin roots but it orginated from China",
+    "cross_ref_episode": 207
+  },
+  {
+    "day": 327,
+    "date_label": "November 23",
+    "quote": "To create this episode but I lack the.",
+    "episode": 185,
+    "episode_title": "Advice",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Advice",
+    "mood": "reflective",
+    "context": "Thi discusses: Today I will give you the best advice I have ever received sorry it took me over 40 years to create this episode but",
+    "cross_ref_episode": 85
+  },
+  {
+    "day": 328,
+    "date_label": "November 24",
+    "quote": "Happily witty yes true yes unfortunately.",
+    "episode": 266,
+    "episode_title": "Unhappiness",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Unhappiness",
+    "mood": "practical",
+    "context": "Thi discusses: Here's the next T witht going wild Oscar wild one needs Misfortune to live happily witty yes true yes unfortunately t",
+    "cross_ref_episode": 200
+  },
+  {
+    "day": 329,
+    "date_label": "November 25",
+    "quote": "The dictionary states that intelligence.",
+    "episode": 10,
+    "episode_title": "Intelligence",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Intelligence",
+    "mood": "reflective",
+    "context": "Thi discusses: Discussion about SAP, data, artificial intelligence",
+    "cross_ref_episode": 316
+  },
+  {
+    "day": 330,
+    "date_label": "November 26",
+    "quote": "Common man right so we are we need to.",
+    "episode": 139,
+    "episode_title": "Murali",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Murali",
+    "mood": "passionate",
+    "context": "Thi discusses: With all due respect right nobody fails okay um it's a it's a so basically it's it's a learning experience right welc",
+    "cross_ref_episode": 262
+  },
+  {
+    "day": 331,
+    "date_label": "November 27",
+    "quote": "Yet most complex breakdown of a 2x2 matrix you have seen on the x-axis we have stupidity and intelligence and.",
+    "episode": 126,
+    "episode_title": "2 By 2",
+    "hashtag": "#mental_model",
+    "category": "Business & Strategy",
+    "theme": "Customer Centricity",
+    "mood": "reflective",
+    "context": "Thi shares wisdom from experience",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 332,
+    "date_label": "November 28",
+    "quote": "Well I could probably do multiple.",
+    "episode": 155,
+    "episode_title": "Process, Outcomes, Process Of Outcomes",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process, Outcomes, Process",
+    "mood": "practical",
+    "context": "Thi discusses: Sometimes I hear I don't care about process I care about outcomes well I could probably do multiple episodes on this",
+    "cross_ref_episode": 200
+  },
+  {
+    "day": 333,
+    "date_label": "November 29",
+    "quote": "Jokes on you do you know how hard it.",
+    "episode": 298,
+    "episode_title": "joke is on you",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "joke is on",
+    "mood": "playful",
+    "context": "Thi discusses: I don't really know how to tell jokes but often I don't need to because the jokes on you do you know how hard it woul",
+    "cross_ref_episode": 362
+  },
+  {
+    "day": 334,
+    "date_label": "November 30",
+    "quote": "Episode of tea with tea today I'm joined.",
+    "episode": 77,
+    "episode_title": "Pole Position",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Pole Position",
+    "mood": "philosophical",
+    "context": "Thi discusses: Episode of tea with tea today I'm joined with mine my wife who is going to talk a little bit about Pole Fitness thank",
+    "cross_ref_episode": 239
+  },
+  {
+    "day": 335,
+    "date_label": "December 1",
+    "quote": "Insights some look into the future and I.",
+    "episode": 296,
+    "episode_title": "Talk to me",
+    "hashtag": "#leadership",
+    "category": "Communication & Storytelling",
+    "theme": "Talk to me",
+    "mood": "inspiring",
+    "context": "Thi discusses: I am an AI Avatar and you talk about me a lot just not directly with or to me some people look back to gain some insi",
+    "cross_ref_episode": 137
+  },
+  {
+    "day": 336,
+    "date_label": "December 2",
+    "quote": "For another intermission on the.",
+    "episode": 314,
+    "episode_title": "Greed  just for fun",
+    "hashtag": "#culture",
+    "category": "Food & Culture",
+    "theme": "Greed just for",
+    "mood": "passionate",
+    "context": "Thi discusses: With all this leadership talk let's talk about something light and happy today for another intermission on the minise",
+    "cross_ref_episode": 250
+  },
+  {
+    "day": 337,
+    "date_label": "December 3",
+    "quote": "Continuously and positively surprise you.",
+    "episode": 275,
+    "episode_title": "Invictus 2",
+    "hashtag": "#philosophy",
+    "category": "Career & Personal Growth",
+    "theme": "Invictus 2",
+    "mood": "reflective",
+    "context": "Thi discusses: As promised here's a follow up on my indictus episode it's probably too long but I am taking that road today I want t",
+    "cross_ref_episode": 120
+  },
+  {
+    "day": 338,
+    "date_label": "December 4",
+    "quote": "Maybe you cannot control the event but.",
+    "episode": 58,
+    "episode_title": "Wrong But Right Pt2",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Wrong But Right",
+    "mood": "inspiring",
+    "context": "Thi discusses: Mad Hatter's tea party continues yes we do the wrong things but they support the right thing part two",
+    "cross_ref_episode": 210
+  },
+  {
+    "day": 339,
+    "date_label": "December 5",
+    "quote": "You can't really miss it when in KOA.",
+    "episode": 249,
+    "episode_title": "2nd highest building",
+    "hashtag": "#strategy",
+    "category": "Business & Strategy",
+    "theme": "2nd highest building",
+    "mood": "passionate",
+    "context": "Thi discusses: Which is the second highest building in the world after the B Khalifa If you're not familiar with southeast Asia this",
+    "cross_ref_episode": 52
+  },
+  {
+    "day": 340,
+    "date_label": "December 6",
+    "quote": "Techniques in corporate life is probably.",
+    "episode": 326,
+    "episode_title": "weaponization of words",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "weaponization of words",
+    "mood": "philosophical",
+    "context": "Thi discusses: The weaponization of words the irony is on you one of the most wannabe cunning techniques in corporate life is probab",
+    "cross_ref_episode": 128
+  },
+  {
+    "day": 341,
+    "date_label": "December 7",
+    "quote": "Have it all the time let's address the.",
+    "episode": 284,
+    "episode_title": "New Karaoke",
+    "hashtag": "#music",
+    "category": "Food & Culture",
+    "theme": "Time Well Spent",
+    "mood": "philosophical",
+    "context": "Thi discusses: Discussion about hiring, ERP, coaching",
+    "cross_ref_episode": 306
+  },
+  {
+    "day": 342,
+    "date_label": "December 8",
+    "quote": "Manifested in such way as you predicted.",
+    "episode": 210,
+    "episode_title": "Cannot predict the future",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Cannot predict the",
+    "mood": "reflective",
+    "context": "Thi discusses: You cannot predict the future actually you can and probably you did but it doesn't mean that that future manifested i",
+    "cross_ref_episode": 150
+  },
+  {
+    "day": 343,
+    "date_label": "December 9",
+    "quote": "Who it is attributed to because what is.",
+    "episode": 365,
+    "episode_title": "So long and thanks for all the fish",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "So long and",
+    "mood": "reflective",
+    "context": "Thi discusses: Discussion about decision-making, tennis, complexity",
+    "cross_ref_episode": 316
+  },
+  {
+    "day": 344,
+    "date_label": "December 10",
+    "quote": "This can be a big challenge but also a.",
+    "episode": 193,
+    "episode_title": "Internet Forgets Nothing",
+    "hashtag": "#communication",
+    "category": "Communication & Storytelling",
+    "theme": "Internet Forgets Nothing",
+    "mood": "provocative",
+    "context": "Thi discusses: Today I want to talk about the hate love fact about the internet the internet forgets nothing this can be a big chall",
+    "cross_ref_episode": 326
+  },
+  {
+    "day": 345,
+    "date_label": "December 11",
+    "quote": "The best way but we would ask ourselves.",
+    "episode": 67,
+    "episode_title": "Pluralism",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Pluralism",
+    "mood": "philosophical",
+    "context": "Thi discusses: We have more in common than what divides us sounds great but we can do better this is going to be one of the most com",
+    "cross_ref_episode": 60
+  },
+  {
+    "day": 346,
+    "date_label": "December 12",
+    "quote": "Everywhere February 14th Valentine's.",
+    "episode": 217,
+    "episode_title": "valentine",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "valentine",
+    "mood": "philosophical",
+    "context": "Thi discusses: Not a public holiday anywhere in the world but very well known nearly everywhere February 14th Valentine's Day I'm no",
+    "cross_ref_episode": 345
+  },
+  {
+    "day": 347,
+    "date_label": "December 13",
+    "quote": "The one person telling the truth is.",
+    "episode": 283,
+    "episode_title": "10 vs 1",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "10 vs 1",
+    "mood": "philosophical",
+    "context": "Thi discusses: Who is Right 10 people telling a lie or one person telling the truth you got it some might have said the one person t",
+    "cross_ref_episode": 247
+  },
+  {
+    "day": 348,
+    "date_label": "December 14",
+    "quote": "All your basion are belong to us and if.",
+    "episode": 201,
+    "episode_title": "All your Bayesian",
+    "hashtag": "#science",
+    "category": "Science & Physics",
+    "theme": "All your Bayesian",
+    "mood": "practical",
+    "context": "Thi discusses: A all your basion are belong to us and if you're still asking if AI will replace humans the answer is yes I don't kno",
+    "cross_ref_episode": 44
+  },
+  {
+    "day": 349,
+    "date_label": "December 15",
+    "quote": "Already the best way they know how.",
+    "episode": 9,
+    "episode_title": "Process",
+    "hashtag": "#philosophy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Process",
+    "mood": "passionate",
+    "context": "Thi discusses: Oh come on of course it's tea do you want some bad business advice today in order to improve your processes you need",
+    "cross_ref_episode": 132
+  },
+  {
+    "day": 350,
+    "date_label": "December 16",
+    "quote": "Today in only two sentences there are.",
+    "episode": 219,
+    "episode_title": "2nd serve",
+    "hashtag": "#tennis",
+    "category": "Career & Personal Growth",
+    "theme": "2nd serve",
+    "mood": "passionate",
+    "context": "Thi discusses: Today I lost because of my second surf it was the worst stroke of my play today in only two sentences there are three",
+    "cross_ref_episode": 65
+  },
+  {
+    "day": 351,
+    "date_label": "December 17",
+    "quote": "Rabbit from Who Framed Roger Rabbit she.",
+    "episode": 226,
+    "episode_title": "frame of reference",
+    "hashtag": "#philosophy",
+    "category": "Communication & Storytelling",
+    "theme": "frame of reference",
+    "mood": "practical",
+    "context": "Thi discusses: Who said I'm not bad I'm just drawn that way it's Roger Rabbit's wife Jessica Rabbit from Who Framed Roger Rabbit she",
+    "cross_ref_episode": 275
+  },
+  {
+    "day": 352,
+    "date_label": "December 18",
+    "quote": "Always sorry to break your heart but.",
+    "episode": 220,
+    "episode_title": "Aging of Wine",
+    "hashtag": "#philosophy",
+    "category": "Food & Culture",
+    "theme": "Aging of Wine",
+    "mood": "passionate",
+    "context": "Thi discusses: Wine gets better with age it does but not significantly and not always sorry to break your heart but keeping a $3 Sup",
+    "cross_ref_episode": 155
+  },
+  {
+    "day": 353,
+    "date_label": "December 19",
+    "quote": "Do you know the difference between a.",
+    "episode": 149,
+    "episode_title": "Labyrinth And Maze",
+    "hashtag": "#philosophy",
+    "category": "Technology & AI",
+    "theme": "Labyrinth And Maze",
+    "mood": "philosophical",
+    "context": "Thi discusses: Do you know the difference between a mace and a labyrinth and which one makes me think of sap signal of your process",
+    "cross_ref_episode": 142
+  },
+  {
+    "day": 354,
+    "date_label": "December 20",
+    "quote": "Machines I love the way slot machines.",
+    "episode": 207,
+    "episode_title": "Slot Machines",
+    "hashtag": "#gambling",
+    "category": "Technology & AI",
+    "theme": "Slot Machines",
+    "mood": "passionate",
+    "context": "Thi discusses: Lots of fun if you're winning but mathematically the worst odds slot machines I love the way slot machines work and I",
+    "cross_ref_episode": 206
+  },
+  {
+    "day": 355,
+    "date_label": "December 21",
+    "quote": "Talent but many things I ask of you.",
+    "episode": 317,
+    "episode_title": "No talents needed",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "No talents needed",
+    "mood": "philosophical",
+    "context": "Thi discusses: And Leadership lesson all the things I will ask from you will not require any talent but many things I ask of you sho",
+    "cross_ref_episode": 20
+  },
+  {
+    "day": 356,
+    "date_label": "December 22",
+    "quote": "It's better to poop in the sink than to sink in the poop.",
+    "episode": 145,
+    "episode_title": "Better Not Good",
+    "hashtag": "#philosophy",
+    "category": "Philosophy & Mindset",
+    "theme": "Pragmatic Choices",
+    "mood": "playful",
+    "context": "Thi argues for choosing the lesser evil when both options are bad \u2014 holiday wisdom at its finest",
+    "cross_ref_episode": null
+  },
+  {
+    "day": 357,
+    "date_label": "December 23",
+    "quote": "I could choose a new profession and.",
+    "episode": 24,
+    "episode_title": "Professional APE 2",
+    "hashtag": "#education",
+    "category": "Education & Learning",
+    "theme": "Professional APE 2",
+    "mood": "passionate",
+    "context": "Thi discusses: Episode 2 of the ape Trilogy we covered the ape amateur today we talk about the second letter P professional I could",
+    "cross_ref_episode": 23
+  },
+  {
+    "day": 358,
+    "date_label": "December 24",
+    "quote": "However you can't really reproduce it.",
+    "episode": 65,
+    "episode_title": "Tennis",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Tennis",
+    "mood": "reflective",
+    "context": "Thi discusses: Are you getting sick and tired of my food metaphors and movie references well sue me and see you on the court well th",
+    "cross_ref_episode": 152
+  },
+  {
+    "day": 359,
+    "date_label": "December 25",
+    "quote": "Appreciate pigeons they can be a bit of.",
+    "episode": 142,
+    "episode_title": "Pigeons",
+    "hashtag": "#philosophy",
+    "category": "Humor & Entertainment",
+    "theme": "Pigeons",
+    "mood": "philosophical",
+    "context": "Thi discusses: I have spoken a lot about processes not so much about pigeons so let's do it",
+    "cross_ref_episode": 252
+  },
+  {
+    "day": 360,
+    "date_label": "December 26",
+    "quote": "But you cannot guess what I was watching.",
+    "episode": 157,
+    "episode_title": "Free Lunch",
+    "hashtag": "#philosophy",
+    "category": "Business & Strategy",
+    "theme": "Free Lunch",
+    "mood": "philosophical",
+    "context": "Thi discusses: There is no free lunch it's a too limited view there is freelance but it could be very expensive I got a free lunch i",
+    "cross_ref_episode": 345
+  },
+  {
+    "day": 361,
+    "date_label": "December 27",
+    "quote": "Because I believe in data but as much I.",
+    "episode": 318,
+    "episode_title": "Goodhart's Law",
+    "hashtag": "#strategy",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Data-Driven Insight",
+    "mood": "passionate",
+    "context": "Thi discusses: Discussion about data, beer, humor",
+    "cross_ref_episode": 32
+  },
+  {
+    "day": 362,
+    "date_label": "December 28",
+    "quote": "Things and then apply my experience in.",
+    "episode": 208,
+    "episode_title": "Lucky Number Slevin",
+    "hashtag": "#humor",
+    "category": "Literature & Language",
+    "theme": "Lucky Number Slevin",
+    "mood": "inspiring",
+    "context": "Thi discusses: Today we conclude the limited series with episode lucky number s the game let's find out the past six episodes I have",
+    "cross_ref_episode": 271
+  },
+  {
+    "day": 363,
+    "date_label": "December 29",
+    "quote": "The most important soft skills in your.",
+    "episode": 87,
+    "episode_title": "Loren 2Nd Part",
+    "hashtag": "#leadership",
+    "category": "Leadership & Management",
+    "theme": "Loren 2Nd Part",
+    "mood": "philosophical",
+    "context": "Thi discusses: I've decided that one of my missions is to have my students learn by making them uncomfortable in certain acceptable ...",
+    "cross_ref_episode": 290
+  },
+  {
+    "day": 364,
+    "date_label": "December 30",
+    "quote": "The strings were too soft and the Sun.",
+    "episode": 152,
+    "episode_title": "Tennis Lost",
+    "hashtag": "#tennis",
+    "category": "Tennis & Sports",
+    "theme": "Tennis Lost",
+    "mood": "philosophical",
+    "context": "Thi discusses: Just lost a set at tennis let me tell you why the strings were too soft and the Sun was shining into my face and don'",
+    "cross_ref_episode": 65
+  },
+  {
+    "day": 365,
+    "date_label": "December 31",
+    "quote": "A day may come when there are no more processes to improve, when we have automated everything. But it is not this day.",
+    "episode": 143,
+    "episode_title": "Continuity",
+    "hashtag": "#leadership",
+    "category": "Digital Transformation / BPM / ERP",
+    "theme": "Never-Ending Journey",
+    "mood": "passionate",
+    "context": "Thi's Aragorn moment \u2014 the fight for better processes is never done, and that's beautiful",
+    "cross_ref_episode": 2
+  }
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+// 2026: Jan 1 = Thursday (day index 4)
+const JAN1_DOW = 4;
+
+let visited = JSON.parse(localStorage.getItem('twt-visited') || '{}');
+let currentDay = null;
+let currentCrossRef = null;
+
+function dayOfYear(month, dayOfMonth) {
+  let d = 0;
+  for (let m = 0; m < month; m++) d += DAYS_IN_MONTH[m];
+  return d + dayOfMonth;
+}
+
+function monthDayFromDoy(doy) {
+  let d = doy;
+  for (let m = 0; m < 12; m++) {
+    if (d <= DAYS_IN_MONTH[m]) return [m, d];
+    d -= DAYS_IN_MONTH[m];
+  }
+  return [11, 31];
+}
+
+function updateStats() {
+  const count = Object.keys(visited).length;
+  document.getElementById('visited-count').textContent = count;
+  const pct = Math.round(count / 365 * 100);
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function saveVisited() {
+  localStorage.setItem('twt-visited', JSON.stringify(visited));
+  updateStats();
+}
+
+function resetVisited() {
+  if (confirm('Reset all visited days?')) {
+    visited = {};
+    saveVisited();
+    renderMonth(currentMonthIdx);
+  }
+}
+
+// Today
+const now = new Date();
+const todayMonth = now.getMonth();
+const todayDate = now.getDate();
+let currentMonthIdx = todayMonth;
+
+function renderMonthNav() {
+  const nav = document.getElementById('month-nav');
+  MONTHS.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (i === currentMonthIdx ? ' active' : '');
+    btn.textContent = m.substring(0, 3);
+    btn.onclick = () => {
+      currentMonthIdx = i;
+      document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMonth(i);
+    };
+    nav.appendChild(btn);
+  });
+}
+
+function renderMonth(monthIdx) {
+  const cal = document.getElementById('calendar');
+  cal.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'month-title';
+  title.textContent = MONTHS[monthIdx];
+  cal.appendChild(title);
+
+  const wh = document.createElement('div');
+  wh.className = 'weekday-header';
+  WEEKDAYS.forEach(wd => {
+    const d = document.createElement('div');
+    d.textContent = wd;
+    wh.appendChild(d);
+  });
+  cal.appendChild(wh);
+
+  const grid = document.createElement('div');
+  grid.className = 'days-grid';
+
+  // DOW for 1st of this month
+  let doy1 = dayOfYear(monthIdx, 1);
+  let dow1 = (JAN1_DOW + doy1 - 1) % 7;
+
+  for (let e = 0; e < dow1; e++) {
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= DAYS_IN_MONTH[monthIdx]; d++) {
+    const doy = dayOfYear(monthIdx, d);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    cell.textContent = d;
+    if (visited[doy]) cell.classList.add('visited');
+    if (monthIdx === todayMonth && d === todayDate) cell.classList.add('today');
+    cell.onclick = () => openDay(doy);
+    grid.appendChild(cell);
+  }
+  cal.appendChild(grid);
+}
+
+function openDay(doy) {
+  const entry = ALMANAC[doy - 1];
+  if (!entry) return;
+  currentDay = doy;
+  visited[doy] = true;
+  saveVisited();
+  renderMonth(currentMonthIdx);
+
+  document.getElementById('m-date').textContent = entry.date_label;
+  document.getElementById('m-quote').textContent = '"' + entry.quote + '"';
+  document.getElementById('m-ep').textContent = entry.episode;
+  document.getElementById('m-title').textContent = entry.episode_title;
+  document.getElementById('m-cat').textContent = entry.category;
+  document.getElementById('m-theme').textContent = entry.theme;
+  document.getElementById('m-hashtag').textContent = entry.hashtag;
+  document.getElementById('m-mood').textContent = entry.mood;
+  document.getElementById('m-context').textContent = entry.context;
+
+  const crossEl = document.getElementById('m-crossref');
+  if (entry.cross_ref_episode) {
+    currentCrossRef = entry.cross_ref_episode;
+    crossEl.textContent = '🔗 See also: Episode ' + entry.cross_ref_episode;
+    crossEl.style.display = 'block';
+  } else {
+    currentCrossRef = null;
+    crossEl.style.display = 'none';
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function navDay(delta) {
+  let next = currentDay + delta;
+  if (next < 1) next = 365;
+  if (next > 365) next = 1;
+  const [m] = monthDayFromDoy(next);
+  if (m !== currentMonthIdx) {
+    currentMonthIdx = m;
+    document.querySelectorAll('.month-btn').forEach((b, i) => b.classList.toggle('active', i === m));
+    renderMonth(m);
+  }
+  openDay(next);
+}
+
+function jumpCrossRef() {
+  if (!currentCrossRef) return;
+  // Find the day that uses this episode
+  const idx = ALMANAC.findIndex(e => e.episode === currentCrossRef);
+  if (idx >= 0) {
+    const doy = idx + 1;
+    const [m] = monthDayFromDoy(doy);
+    if (m !== currentMonthIdx) {
+      currentMonthIdx = m;
+      document.querySelectorAll('.month-btn').forEach((b, i) => b.classList.toggle('active', i === m));
+      renderMonth(m);
+    }
+    openDay(doy);
+  }
+}
+
+document.getElementById('modal-overlay').onclick = (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+};
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('modal-overlay').classList.contains('open')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') navDay(-1);
+  if (e.key === 'ArrowRight') navDay(1);
+});
+
+renderMonthNav();
+renderMonth(currentMonthIdx);
+updateStats();
+</script>
+</body>
+</html>
